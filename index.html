@@ -312,7 +312,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       <p class="msg" id="rmsg"></p>
       <p class="lvup" id="rpt"></p>
       <div id="questclear" class="jobclear hide"><p id="questclearmsg"></p><button class="btn" id="toquest">ルシャトリエのカードを見る</button></div>
-      <div id="jobclear" class="jobclear hide"><p id="jobclearmsg"></p><button class="btn" id="toscis">次の仲間をえらぶ</button></div>
+      <div id="jobclear" class="jobclear hide"><p id="jobclearmsg"></p><button class="btn" id="toscis">研究チームを入れかえる</button></div>
       <div id="wrongwrap" class="hide">
         <h2>まちがえた問題</h2>
         <ul class="wronglist" id="wrongs"></ul>
@@ -844,7 +844,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
 
   // ===== 回の開放(CFG.open に日付を入れた回はその日から。空文字はいつでも) =====
   function isOpen(u){ var d = CFG.open[u]; return d !== undefined && d <= todayJST(); }
-  function sciJoined(id){ return P.sci === id || !!(P.scis && P.scis[id]); }
+  function sciJoined(id){ return inTeam(id) || !!(P.scis && P.scis[id]) || !!(P.rp && P.rp[id]); }
   function avail(q){
     if (q.f === '偉人') return sciJoined(q.sid);
     return q.u.some(isOpen);
@@ -892,8 +892,16 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
 
   // ===== 仲間(科学者)の進み方 =====
   var TIERNAME = ['はじまり','古代〜ルネサンス','17〜18世紀の科学者','19世紀の科学者','日本の近代科学','20世紀の科学者','現代のノーベル賞','殿堂','🚨 緊急クエスト'];
-  function sciOf(){ return SCIMAP[P.sci] || SCIMAP.me; }
+  // ===== 研究チーム(3人まで) =====
+  // レベルが1上がるごとに、チーム全員の研究が1進む。見習い研究者は9、ほかの科学者は13で研究完成(全員でレベル500くらいが目安)。
+  var TEAM_MAX = 3, RK = 13, RK_ME = 9;
+  function rkOf(id){ return id === 'me' ? RK_ME : RK; }
+  function teamIds(){ var t = (P.team || []).filter(function(id){ return SCIMAP[id]; }); return t.length ? t : ['me']; }
+  function teamOf(){ return teamIds().map(function(id){ return SCIMAP[id]; }); }
+  function inTeam(id){ return teamIds().indexOf(id) >= 0; }
+  function sciOf(){ return SCIMAP[teamIds()[0]] || SCIMAP.me; }
   function sciCleared(id){ return !!(P.scis && P.scis[id]); }
+  function rpOf(id){ return sciCleared(id) ? rkOf(id) : Math.min(rkOf(id), (P.rp || {})[id] || 0); }
   // ===== 緊急クエスト =====
   function questOfSci(j){ var r = null; (CFG.quests || []).forEach(function(q){ if (q.id === j.quest) r = q; }); return r; }
   function qState(q){ P.quests = P.quests || {}; return P.quests[q.id] || (P.quests[q.id] = {n:0, done:false}); }
@@ -908,38 +916,62 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     var st = sciState(j);
     if (st !== 'locked') return true;
     if (j.quest){ var q = questOfSci(j); return !!q && qActive(q); }
-    return j.req.every(function(r){ return sciCleared(r) || P.sci === r; });
+    return j.req.every(function(r){ return sciCleared(r) || inTeam(r); });
   }
   function sciAvail(j){ return !sciCleared(j.id) && j.req.every(sciCleared) && qUnlocked(j); }
   function sciState(j){
+    if (inTeam(j.id)) return 'current';
     if (sciCleared(j.id)) return 'cleared';
-    if (P.sci === j.id) return 'current';
     if (sciAvail(j)) return 'avail';
     return 'locked';
   }
-  function sciLv(){ var l = lvOf(P.xp).lv; return Math.max(1, Math.min(10, l - (P.sciStart || 1) + 1)); }
-  function sciDone(){ return lvOf(P.xp).lv >= (P.sciStart || 1) + 9 || lvOf(P.xp).lv >= MAXLV; }
-  function initSci(){
-    if (!P.sci){ P.sci = 'me'; P.sciStart = lvOf(P.xp).lv; P.scis = P.scis || {}; saveP(); }
-  }
-  function checkSciClear(){
-    var j = sciOf();
-    if (!sciCleared(j.id) && sciDone()){ P.scis = P.scis || {}; P.scis[j.id] = 1; saveP(); return j; }
-    return null;
-  }
-  // 科学者ごとの研究レベルを保存しておき、もどしたときはそこから再開する
+  // 研究レベル(1〜10の表示用)。研究はチームを外れても保存される
   function savedLv(id){
     if (sciCleared(id)) return 10;
-    if (P.sci === id) return sciLv();
-    return Math.max(1, Math.min(10, ((P.prog || {})[id] || 0) + 1));
+    return Math.max(1, Math.min(9, 1 + Math.floor(rpOf(id) * 9 / rkOf(id))));
   }
-  function changeSci(id){
-    var j = SCIMAP[id]; if (!j || sciState(j) === 'locked') return;
-    P.prog = P.prog || {};
-    if (!sciCleared(P.sci)) P.prog[P.sci] = sciLv() - 1;          // いまの仲間の研究を保存
-    var keep = sciCleared(id) ? 0 : (P.prog[id] || 0);              // 研究が完成した仲間は最初から(技は全部使える)
-    P.sci = id; P.sciStart = lvOf(P.xp).lv - keep; saveP();
+  function sciLv(){ return savedLv(sciOf().id); }
+  function initSci(){
+    P.scis = P.scis || {}; P.rp = P.rp || {};
+    if (!P.team){
+      // 1人制からの引っこし: これまでの研究の進み具合を、チーム制の研究ポイントにうつす
+      var old = P.sci || 'me', lvNow = lvOf(P.xp).lv;
+      Object.keys(P.prog || {}).forEach(function(id){ if (SCIMAP[id] && !sciCleared(id)) P.rp[id] = Math.max(P.rp[id] || 0, Math.round((P.prog[id] || 0) / 9 * rkOf(id))); });
+      if (SCIMAP[old] && !sciCleared(old)){ var done0 = Math.max(0, Math.min(9, lvNow - (P.sciStart || lvNow))); P.rp[old] = Math.max(P.rp[old] || 0, Math.round(done0 / 9 * rkOf(old))); }
+      P.team = [SCIMAP[old] ? old : 'me'];
+    }
+    if (!P.rlv) P.rlv = lvOf(P.xp).lv;
+    P.sci = teamIds()[0];
+    saveP();
   }
+  // ポイントを足す。レベルが上がった分だけチーム全員の研究が進む。新しく研究が完成した科学者を返す
+  function addXp(n){
+    P.xp = Math.min(P.xp + n, 9e8);
+    var lv = lvOf(P.xp).lv, d = lv - (P.rlv || lv), got = [];
+    if (d > 0){
+      P.rp = P.rp || {}; P.scis = P.scis || {};
+      teamIds().forEach(function(id){
+        if (sciCleared(id)) return;
+        P.rp[id] = (P.rp[id] || 0) + d;
+        if (P.rp[id] >= rkOf(id)){ P.scis[id] = 1; got.push(SCIMAP[id]); }
+      });
+    }
+    if (lv > (P.rlv || 0)) P.rlv = lv;
+    saveP();
+    return got;
+  }
+  function checkSciClear(){ return []; }
+  function setTeam(t){ P.team = t.slice(0, TEAM_MAX); if (!P.team.length) P.team = ['me']; P.sci = P.team[0]; saveP(); }
+  function joinTeam(id, outId){
+    var j = SCIMAP[id]; if (!j || sciState(j) === 'locked' || inTeam(id)) return;
+    var t = teamIds().filter(function(x){ return x !== outId; });
+    if (t.length === 1 && t[0] === 'me' && sciCleared('me')) t = [];   // 研究が終わった見習いは自動で外れる
+    t.push(id); setTeam(t);
+  }
+  function leaveTeam(id){ var t = teamIds().filter(function(x){ return x !== id; }); setTeam(t.length ? t : ['me']); }
+  function changeSci(id){ joinTeam(id); }
+  // チームのうち、問題qが得意分野のメンバー
+  function teamStrong(q){ return teamOf().filter(function(j){ return isSp(j, q); }); }
   // 得意分野・テスト向き・誕生日
   function gnoUnits(g){
     if (!g) return [];
@@ -970,9 +1002,10 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     $('lvH').className = 'lv t' + Math.min(Math.floor((l.lv - 1) / 10), 7);
     $('ptH').textContent = P.xp + 'pt(つぎまで' + l.rest + ')' + (P.streak > 1 ? '・' + P.streak + '日れんぞく' : '');
     $('mute').textContent = P.mute ? '🔇' : '🔊';
-    var j = sciOf();
-    $('jicon').textContent = j.i; $('jname').textContent = j.n;
-    $('jprog').textContent = sciCleared(j.id) ? '研究完成(次の仲間をえらべます)' : '研究レベル ' + sciLv() + ' / 10' + (sciDone() ? '・完成!' : '');
+    var tm = teamOf();
+    $('jicon').textContent = tm.map(function(j){ return j.i; }).join('');
+    $('jname').textContent = '研究チーム: ' + tm.map(function(j){ return j.n; }).join('・');
+    $('jprog').textContent = tm.map(function(j){ return sciCleared(j.id) ? j.n + ' 完成✓' : j.n + ' Lv' + savedLv(j.id); }).join(' / ') + (tm.length < TEAM_MAX && SCI.some(function(x){ return sciState(x) === 'avail'; }) ? '(あと' + (TEAM_MAX - tm.length) + '人入れられる)' : '') + (tm.some(function(j){ return sciCleared(j.id); }) ? '・入れかえよう!' : '');
   }
 
   // ===== 音(効果音は端末で合成。外部ファイルなし) =====
@@ -1207,7 +1240,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     var bd = SCI.filter(function(j){ return isBday(j) && sciState(j) !== 'locked'; }), bb = $('bday');
     if (bd.length){
       bb.textContent = '🎂 今日は ' + bd.map(function(j){ return j.i + j.n; }).join('・') + ' の誕生日!' +
-        (bd.some(function(j){ return j.id === P.sci; }) ? ' いまの仲間なので、今日はポイント2倍!' : ' 仲間にしていると今日はポイント2倍。');
+        (bd.some(function(j){ return inTeam(j.id); }) ? ' 研究チームにいるので、今日はポイント2倍!' : ' 研究チームに入れると今日はポイント2倍。');
       bb.classList.remove('hide');
     } else bb.classList.add('hide');
     buildQuest();
@@ -1227,7 +1260,11 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     if (!su) sg.textContent = '💪 この範囲に強い仲間: 全員';
     else {
       var st2 = SCI.filter(function(j){ return j.id !== 'me' && j.id !== 'legend' && sciState(j) !== 'locked' && spOf(j).some(function(u){ return su.indexOf(u) >= 0; }); });
-      sg.textContent = st2.length ? '💪 この範囲に強い仲間: ' + st2.slice(0, 6).map(function(j){ return j.i + j.n; }).join('、') + (st2.length > 6 ? ' ほか' + (st2.length - 6) + '人' : '') : '';
+      var tsg = teamOf().filter(function(j){ return spOf(j).some(function(u){ return su.indexOf(u) >= 0; }); });
+      var oth = st2.filter(function(j){ return !inTeam(j.id); });
+      sg.textContent = (tsg.length ? '🧪 研究チームで得意: ' + tsg.map(function(j){ return j.i + j.n; }).join('・') + '(得意分野の問題 +' + (50 * tsg.length) + '%)' : '🧪 研究チームにこの範囲が得意な人がいません') +
+        (oth.length ? '\n💪 この範囲に強い仲間: ' + oth.slice(0, 6).map(function(j){ return j.i + j.n; }).join('、') + (oth.length > 6 ? ' ほか' + (oth.length - 6) + '人' : '') : '');
+      sg.style.whiteSpace = 'pre-line';
     }
     var nc = nextClass();
     $('nextclass').textContent = nc ? '次の授業: ' + nc.md + ' ' + unitLabel(nc.u) + '(その日から問題が出ます)' : '';
@@ -1307,8 +1344,8 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       var sel = pool.slice(0, count);
       // いまの仲間の問題が出せるなら、1問は必ず入れる
       if (mode === 'all'){
-        var mine = pool.filter(function(q){ return q.f === '偉人' && q.sid === P.sci; });
-        if (mine.length && !sel.some(function(q){ return q.f === '偉人' && q.sid === P.sci; })) sel[sel.length - 1] = mine[0];
+        var mine = pool.filter(function(q){ return q.f === '偉人' && inTeam(q.sid); });
+        if (mine.length && !sel.some(function(q){ return q.f === '偉人' && inTeam(q.sid); })) sel[sel.length - 1] = mine[0];
       }
       pool = shuffle(sel);
     }
@@ -1391,7 +1428,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
   function undo(){
     if (!last || busy) return;
     pos = last.pos; first = last.first; right = last.right; wrongs.length = last.nw; combo = last.combo; gainedTotal = last.gt;
-    P.xp = last.xp; P.scis = JSON.parse(last.scis); P.quests = JSON.parse(last.qs); saveP(); sciClearedNow = last.jc; questNow = last.qn;
+    P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); saveP(); sciClearedNow = last.jc; questNow = last.qn;
     if (E){ E.hp = last.ehp; E.dead = last.edead; drawEnemy(); }
     if (last.s) S[last.sid] = last.s; else delete S[last.sid];
     saveS(); last = null; clearFx();
@@ -1403,7 +1440,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     if (busy) return;
     var it = queue[pos], q = it.q, gained = 0, rankUp = false, L2 = 0, waitMs = 1500;
     last = {pos:pos, first:first, right:right, nw:wrongs.length, combo:combo, gt:gainedTotal, xp:P.xp, sid:q.id, s:S[q.id] ? {l:S[q.id].l, d:S[q.id].d} : null,
-            ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow};
+            ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), rp:JSON.stringify(P.rp || {}), rlv:P.rlv, jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow};
     if (!it.retry){
       first++;
       var L = (S[q.id] && S[q.id].l) || 0;
@@ -1418,18 +1455,19 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       gained = 10 + Math.min(combo - 1, 10) * 2; if (crit) gained *= 2;
       if (q.f === '偉人') gained += 5;
       var bonus = [];
-      if (isSp(sciOf(), q)){ gained = Math.round(gained * 1.5); bonus.push('得意分野×1.5'); }
-      if (isBday(sciOf())){ gained *= 2; bonus.push('誕生日×2'); }
+      var strongM = teamStrong(q);
+      if (strongM.length){ gained = Math.round(gained * (1 + 0.5 * strongM.length)); bonus.push('チームの得意分野+' + (50 * strongM.length) + '%'); }
+      if (teamOf().some(isBday)){ gained *= 2; bonus.push('誕生日×2'); }
       var pp = permPct(q); if (pp > 0){ gained = Math.round(gained * (1 + pp / 100)); bonus.push('研究の成果+' + pp + '%'); }
-      var before = lvOf(P.xp).lv; P.xp = Math.min(P.xp + gained, 9e8); gainedTotal += gained; saveP();
+      var before = lvOf(P.xp).lv, newly = addXp(gained); gainedTotal += gained;
       var killed = hitEnemy(gained + Math.floor(Math.random() * 6));
-      if (killed){ P.xp += 30; gainedTotal += 30; saveP(); }
+      if (killed){ newly = newly.concat(addXp(30)); gainedTotal += 30; }
       celebrate(combo, gained + (killed ? 30 : 0), rankUp && !it.retry, L2);
-      waitMs = attackFx(sciOf(), gained, crit, bonus);
+      var tmA = strongM.length ? strongM : teamOf();
+      waitMs = attackFx(tmA[Math.floor(Math.random() * tmA.length)], gained, crit, bonus);
       if (killed){ var k = document.createElement('div'); k.className = 'act'; k.style.top = '60%'; k.textContent = E.n + 'をたおした! +30pt'; fx.appendChild(k); }
       if (lvOf(P.xp).lv > before) setTimeout(function(){ tone([523, 659, 784, 1047], 0.1); }, 350);
-      var cj = checkSciClear();
-      if (cj){ sciClearedNow = cj; setTimeout(function(){ var m = document.createElement('div'); m.className = 'act'; m.style.top = '70%'; m.style.background = '#f2b01e'; m.style.color = '#2a1700'; m.textContent = cj.n + 'との研究が完成!'; fx.appendChild(m); tone([784, 988, 1175, 1568], 0.1); }, 300); }
+      if (newly.length){ sciClearedNow = (sciClearedNow || []).concat(newly); var nm = newly.map(function(j){ return j.n; }).join('・'); setTimeout(function(){ var m = document.createElement('div'); m.className = 'act'; m.style.top = '70%'; m.style.background = '#f2b01e'; m.style.color = '#2a1700'; m.textContent = nm + 'との研究が完成!'; fx.appendChild(m); tone([784, 988, 1175, 1568], 0.1); }, 300); }
     } else {
       combo = 0; encourage();
       var o = document.createElement('div'); o.className = 'ouch'; o.textContent = E ? E.n + 'のこうげき!' : ''; fx.appendChild(o);
@@ -1469,7 +1507,8 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     var qc = $('questclear');
     if (questNow){ $('questclearmsg').textContent = '🚨 ' + questNow.title + ' クリア!' + SCIMAP[questNow.sci].i + ' ' + SCIMAP[questNow.sci].n + 'が仲間にできるようになったよ。'; qc.classList.remove('hide'); } else qc.classList.add('hide');
     var jc = $('jobclear');
-    if (sciDone() && sciCleared(sciOf().id)){ $('jobclearmsg').textContent = sciOf().n + 'との研究が完成した!次の仲間をえらぼう。'; jc.classList.remove('hide'); }
+    var fin = teamOf().filter(function(j){ return sciCleared(j.id); });
+    if (fin.length){ $('jobclearmsg').textContent = fin.map(function(j){ return j.n; }).join('・') + 'との研究が完成した!研究チームを入れかえよう。'; jc.classList.remove('hide'); }
     else jc.classList.add('hide');
     show('result');
   }
@@ -1478,9 +1517,9 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
   function openScis(){
     checkSciClear();
     var box = $('scitiers'); box.innerHTML = '';
-    var cur = sciOf(), n = Object.keys(P.scis || {}).length;
-    $('scislead').textContent = 'いまの仲間: ' + cur.i + ' ' + cur.n + '(研究レベル ' + sciLv() + '/10)・研究が完成した仲間 ' + n + ' / ' + SCI.length +
-      (sciDone() || sciCleared(cur.id) ? '。次の仲間をえらべます。' : '。研究レベルが10になると研究完成。とちゅうで交代しても研究レベルは保存されます。') + (n ? ' 🌟研究の成果: ぜんぶの問題で +' + globalPct() + '%(完成1人ごとに+' + GL_PCT + '%・各時代の仲間が全員完成すると+' + TIER_PCT + '%)。さらに、完成した仲間の得意分野の問題は1人ごとに+' + SP_PCT + '%、ずっと続きます。' : ' 研究が完成した仲間の効果は、ずっと続きます(完成1人ごとに全問題+' + GL_PCT + '%、その人の得意分野はさらに+' + SP_PCT + '%)。') + ' カードを押すと、その科学者のことがわかります。「📝テスト向き」は次のテスト範囲が得意分野の科学者。得意分野の問題に正解するとポイント1.5倍!';
+    var tm0 = teamOf(), n = Object.keys(P.scis || {}).length;
+    $('scislead').textContent = '研究チーム: ' + tm0.map(function(j){ return j.i + j.n + (sciCleared(j.id) ? '(完成)' : '(Lv' + savedLv(j.id) + ')'); }).join('・') + '・研究が完成した仲間 ' + n + ' / ' + SCI.length +
+      '。チームには' + TEAM_MAX + '人まで入れられて、レベルが1上がるごとに全員の研究が進みます(' + RK + 'レベルで完成。チームから外しても研究は保存されます)。' + (n ? ' 🌟研究の成果: ぜんぶの問題で +' + globalPct() + '%(完成1人ごとに+' + GL_PCT + '%・各時代の仲間が全員完成すると+' + TIER_PCT + '%)。さらに、完成した仲間の得意分野の問題は1人ごとに+' + SP_PCT + '%、ずっと続きます。' : ' 研究が完成した仲間の効果は、ずっと続きます(完成1人ごとに全問題+' + GL_PCT + '%、その人の得意分野はさらに+' + SP_PCT + '%)。') + ' カードを押すと、その科学者のことがわかります。「📝テスト向き」は次のテスト範囲が得意分野の科学者。チームのメンバーの得意分野の問題に正解すると、得意なメンバー1人ごとにポイント+50%!';
     for (var t = 0; t <= 8; t++){
       var js = SCI.filter(function(j){ return j.t === t; }); if (!js.length) continue;
       if (t === 8 && !js.some(sciVis)) continue;
@@ -1497,8 +1536,8 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
         if (!vis) sm.textContent = '???' + (j.req.length ? '(' + j.req.map(function(r){ return sciCleared(r) ? SCIMAP[r].n : '???'; }).join('・') + 'の研究のあと)' : '');
         else if (st === 'locked' && j.quest){ var qq0 = questOfSci(j); sm.textContent = '🚨緊急クエスト: ' + qq0.need + '問正解で仲間に(いま' + Math.min(qState(qq0).n || 0, qq0.need) + '問)'; }
         else if (st === 'locked') sm.textContent = j.req.map(function(r){ return SCIMAP[r].n; }).join('・') + 'の研究が完成すると仲間にできる';
-        else if (st === 'avail') sm.textContent = ((P.prog || {})[j.id] ? '研究とちゅう(レベル' + savedLv(j.id) + '/10)・' : '') + '仲間にできる!';
-        else if (st === 'current') sm.textContent = j.d + '・いまの仲間';
+        else if (st === 'avail') sm.textContent = (rpOf(j.id) ? '研究とちゅう(レベル' + savedLv(j.id) + '/10)・' : '') + 'チームに入れられる!';
+        else if (st === 'current') sm.textContent = '研究チーム・' + (sciCleared(j.id) ? '研究完成' : 'レベル' + savedLv(j.id) + '/10');
         else sm.textContent = j.d;
         b.appendChild(ic); b.appendChild(nm); b.appendChild(sm);
         if (vis && j.id !== 'me'){
@@ -1517,7 +1556,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     var box = $('scicard'); box.innerHTML = '';
     var card = document.createElement('div'); card.className = 'card';
     var ci = document.createElement('div'); ci.className = 'ci'; ci.textContent = j.i; card.appendChild(ci);
-    var h3 = document.createElement('h3'); h3.textContent = (justJoined ? '仲間になった! ' : '') + j.n; card.appendChild(h3);
+    var h3 = document.createElement('h3'); h3.textContent = (justJoined ? '研究チームに入った! ' : '') + j.n; card.appendChild(h3);
     var era = document.createElement('p'); era.className = 'era'; era.textContent = j.era; card.appendChild(era);
     var deed = document.createElement('div'); deed.className = 'deed'; deed.textContent = '偉業: ' + j.d; card.appendChild(deed);
     if (j.id !== 'me'){
@@ -1527,7 +1566,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     }
     if (j.id !== 'me'){
       var pm = document.createElement('p'); pm.className = 'note';
-      pm.textContent = (sciCleared(j.id) ? '🌟研究の成果(ずっと有効): ' : '研究が完成すると、ずっと有効: ') + 'ぜんぶの問題+' + GL_PCT + '%・得意分野の問題+' + SP_PCT + '%';
+      pm.textContent = '研究チームにいるとき: 得意分野の問題+50% ／ ' + (sciCleared(j.id) ? '🌟研究の成果(ずっと有効): ' : '研究が完成すると、ずっと有効: ') + 'ぜんぶの問題+' + GL_PCT + '%・得意分野の問題+' + SP_PCT + '%';
       card.appendChild(pm);
     }
     var ul = document.createElement('ul'); j.facts.forEach(function(f){ var li = document.createElement('li'); li.textContent = f; ul.appendChild(li); }); card.appendChild(ul);
@@ -1554,31 +1593,50 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       });
       card.appendChild(ml);
     }
-    var row = document.createElement('div'); row.className = 'row';
+    var row = document.createElement('div'); row.className = 'row'; row.style.flexWrap = 'wrap';
     var close = document.createElement('button'); close.className = 'btn ghost'; close.type = 'button'; close.textContent = 'とじる';
     close.onclick = function(){ box.classList.add('hide'); };
     row.appendChild(close);
-    var canChange = P.sci !== j.id && (st === 'avail' || st === 'cleared');
-    if (canChange){
-      var go = document.createElement('button'); go.className = 'btn'; go.type = 'button'; go.textContent = st === 'cleared' ? 'もういちど仲間にする' : '仲間にする';
+    function after(msg){ box.classList.add('hide'); openScis(); hud(); buildHome(); tone([523, 659, 784, 1047], 0.1); openCard(j, msg); }
+    if (st === 'current'){
+      if (teamIds().length > 1){
+        var out = document.createElement('button'); out.className = 'btn ghost'; out.type = 'button'; out.textContent = 'チームから外す';
+        out.onclick = function(){ leaveTeam(j.id); box.classList.add('hide'); openScis(); hud(); buildHome(); };
+        row.appendChild(out);
+      }
+    } else if (st === 'avail' || st === 'cleared'){
+      var go = document.createElement('button'); go.className = 'btn'; go.type = 'button'; go.textContent = '研究チームに入れる';
       // 押しまちがい防止: 1回目は確認だけ
       go.onclick = function(){
         row.innerHTML = '';
+        var tm = teamOf(), meOnly = tm.length === 1 && tm[0].id === 'me' && sciCleared('me');
         var ask = document.createElement('p'); ask.className = 'confirm';
-        var lvCur = sciCleared(cur.id) ? 0 : sciLv(), lvNew = sciCleared(j.id) ? 0 : savedLv(j.id);
-        ask.textContent = j.i + ' ' + j.n + ' を仲間にしますか? いまの仲間(' + cur.i + ' ' + cur.n + ')とは交代です。' + (lvCur ? cur.n + 'の研究レベル' + lvCur + 'は保存され、もどせばそこから再開できます。' : '') + (lvNew ? j.n + 'は研究レベル' + lvNew + 'からスタート。' : 'もう研究が完成しているので、技は全部使えます。');
+        var lvNew = sciCleared(j.id) ? 0 : savedLv(j.id);
+        var note2 = lvNew ? j.n + 'は研究レベル' + lvNew + 'から。' : 'もう研究が完成しているので、技は全部使えます(研究は進みません)。';
         var no = document.createElement('button'); no.className = 'btn ghost'; no.type = 'button'; no.textContent = 'やめる';
         no.onclick = function(){ openCard(j); };
-        var yes = document.createElement('button'); yes.className = 'btn'; yes.type = 'button'; yes.textContent = 'はい、仲間にする';
-        yes.disabled = true; setTimeout(function(){ yes.disabled = false; }, 600);   // つづけて連打しても決まらない
-        yes.onclick = function(){ changeSci(j.id); box.classList.add('hide'); openScis(); hud(); buildHome(); tone([523, 659, 784, 1047], 0.1); openCard(j, true); };
-        row.appendChild(no); row.appendChild(yes);
+        if (tm.length < TEAM_MAX || meOnly){
+          ask.textContent = j.i + ' ' + j.n + ' を研究チームに入れますか? ' + note2;
+          var yes = document.createElement('button'); yes.className = 'btn'; yes.type = 'button'; yes.textContent = 'はい、入れる';
+          yes.disabled = true; setTimeout(function(){ yes.disabled = false; }, 600);   // つづけて連打しても決まらない
+          yes.onclick = function(){ joinTeam(j.id); after(true); };
+          row.appendChild(no); row.appendChild(yes);
+        } else {
+          ask.textContent = 'チームは' + TEAM_MAX + '人までです。だれと交代しますか? (外れた人の研究は保存されます) ' + note2;
+          row.appendChild(no);
+          tm.forEach(function(m){
+            var sw = document.createElement('button'); sw.className = 'btn'; sw.type = 'button'; sw.textContent = m.i + ' ' + m.n + 'と交代' + (sciCleared(m.id) ? '(完成)' : '');
+            sw.disabled = true; setTimeout(function(){ sw.disabled = false; }, 600);
+            sw.onclick = function(){ joinTeam(j.id, m.id); after(true); };
+            row.appendChild(sw);
+          });
+        }
         card.insertBefore(ask, row);
       };
       row.appendChild(go);
-    } else if (st === 'avail' || st === 'locked'){
+    } else if (st === 'locked'){
       var ng = document.createElement('button'); ng.className = 'btn'; ng.type = 'button'; ng.disabled = true;
-      ng.textContent = st === 'locked' ? (j.quest ? '緊急クエストをクリアしてから' : j.req.map(function(r){ return SCIMAP[r].n; }).join('・') + 'の研究が完成してから') : 'いまの仲間の研究が完成してから';
+      ng.textContent = j.quest ? '緊急クエストをクリアしてから' : j.req.map(function(r){ return SCIMAP[r].n; }).join('・') + 'の研究が完成してから';
       row.appendChild(ng);
     }
     card.appendChild(row);
@@ -1679,7 +1737,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     if (WHO.k >= WHO.list.length){
       var h0 = document.createElement('h3'); h0.textContent = '🕵️ けっか ' + WHO.right + ' / ' + WHO.list.length + '問正解'; card.appendChild(h0);
       var p0 = document.createElement('p'); p0.textContent = '+' + WHO.pts + 'pt ゲット!'; card.appendChild(p0);
-      if (WHO.pts){ P.xp += WHO.pts; saveP(); checkSciClear(); }
+      if (WHO.pts){ addXp(WHO.pts); }
       var c0 = document.createElement('button'); c0.className = 'btn'; c0.type = 'button'; c0.textContent = 'もう一回'; c0.onclick = openWho;
       var c1 = document.createElement('button'); c1.className = 'btn ghost'; c1.type = 'button'; c1.textContent = 'とじる'; c1.onclick = function(){ box.classList.add('hide'); buildHome(); };
       card.appendChild(c0); card.appendChild(c1); box.appendChild(card); box.classList.remove('hide'); return;
@@ -1747,7 +1805,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       var o = JSON.parse(b64d(v.slice(6)));
       var n = 0;
       Object.keys(o.S || {}).forEach(function(k){ var a = S[k], b = o.S[k]; if (!a || (b && (b.l > a.l || (b.l === a.l && b.d > a.d)))){ S[k] = b; n++; } });
-      if (o.P){ if ((o.P.xp || 0) > (P.xp || 0)){ P.xp = o.P.xp; P.sci = o.P.sci || P.sci; P.sciStart = o.P.sciStart || P.sciStart; } P.scis = Object.assign({}, o.P.scis || {}, P.scis || {}); var pr = Object.assign({}, o.P.prog || {}); Object.keys(P.prog || {}).forEach(function(k){ pr[k] = Math.max(pr[k] || 0, P.prog[k]); }); P.prog = pr; P.streak = Math.max(P.streak || 0, o.P.streak || 0);
+      if (o.P){ if ((o.P.xp || 0) > (P.xp || 0)){ P.xp = o.P.xp; P.sci = o.P.sci || P.sci; P.sciStart = o.P.sciStart || P.sciStart; if (o.P.team) P.team = o.P.team; P.rlv = o.P.rlv || lvOf(P.xp).lv; } var rpm = Object.assign({}, o.P.rp || {}); Object.keys(P.rp || {}).forEach(function(k){ rpm[k] = Math.max(rpm[k] || 0, P.rp[k]); }); P.rp = rpm; P.scis = Object.assign({}, o.P.scis || {}, P.scis || {}); var pr = Object.assign({}, o.P.prog || {}); Object.keys(P.prog || {}).forEach(function(k){ pr[k] = Math.max(pr[k] || 0, P.prog[k]); }); P.prog = pr; P.streak = Math.max(P.streak || 0, o.P.streak || 0);
         var qm = Object.assign({}, o.P.quests || {}); Object.keys(P.quests || {}).forEach(function(k){ var a = qm[k] || {n:0, done:false}, b = P.quests[k]; qm[k] = {n: Math.max(a.n || 0, b.n || 0), done: !!(a.done || b.done), at: b.at || a.at}; }); P.quests = qm; }
       saveS(); saveP(); initSci(); buildHome();
       $('bkmsg').textContent = '読み込みました(' + n + '問分を更新)。';
@@ -1762,7 +1820,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     b2.onclick = function(){ box.classList.add('hide'); resetStep = 0; };
     b1.onclick = function(){
       if (resetStep === 1){ resetStep = 2; p.textContent = '本当に消しますか?もとにはもどせません。'; b1.textContent = '本当に消す'; return; }
-      S = {}; saveS(); P = {xp:0, mute:P.mute, day:'', streak:0, sci:'me', sciStart:1, scis:{}, prog:{}}; saveP();
+      S = {}; saveS(); P = {xp:0, mute:P.mute, day:'', streak:0, sci:'me', team:['me'], rp:{}, rlv:1, scis:{}, prog:{}}; saveP();
       try { localStorage.removeItem(KEY); localStorage.removeItem(PKEY); } catch(e){}
       box.classList.add('hide'); resetStep = 0; buildHome();
     };
