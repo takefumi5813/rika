@@ -805,7 +805,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
   // ===== テキストの内容かどうか(tu: テキストの内容として出てくる回) =====
   // グノーブルのテキスト(s:'グノーブル')の問題はその回のテキスト問題。ほかの問題集の問題は、
   // 答えの用語がすべて・問題文の用語が7割以上、その回のテキスト問題に出てくれば「テキストの内容」とみなす。
-  // どの回のテキストにも出てこない問題は「関連問題」: これまで全部には出るが、直近授業の復習・直近テストだけには出ない。
+  // どの回のテキストにも出てこない問題は「関連問題」: これまで全部には出るが、次回復習テスト対策・次回グノレブ対策には出ない。
   (function(){
     var SYN = [["流紋岩", "リュウモン岩"], ["安山岩", "アンザン岩"], ["玄武岩", "ゲンブ岩"], ["花こう岩", "カコウ岩"], ["花崗岩", "カコウ岩"], ["閃緑岩", "センリョク岩"], ["せん緑岩", "センリョク岩"], ["斑れい岩", "ハンレイ岩"], ["はんれい岩", "ハンレイ岩"], ["黒雲母", "クロウンモ"], ["角閃石", "カクセン石"], ["輝石", "キ石"], ["かんらん石", "カンラン石"], ["石英", "セキエイ"], ["長石", "チョウセキ"], ["凝灰岩", "ギョウ灰岩"], ["ぎょう灰岩", "ギョウ灰岩"], ["ギョウカイ岩", "ギョウ灰岩"], ["石灰岩", "セッカイ岩"], ["せっかい岩", "セッカイ岩"], ["恐竜", "キョウリュウ"], ["粘板岩", "ネンバン岩"], ["頁岩", "ケツ岩"], ["堆積", "タイ積"], ["たい積", "タイ積"], ["侵食", "シン食"], ["しん食", "シン食"], ["粘り気", "ネバリ気"], ["ねばり気", "ネバリ気"], ["ろ過", "ロ過"], ["沸騰", "フットウ"], ["ふっとう", "フットウ"], ["溶解度", "ヨウ解度"], ["よう解度", "ヨウ解度"], ["飽和", "ホウ和"], ["ほう和", "ホウ和"], ["しゅう曲", "シュウ曲"], ["褶曲", "シュウ曲"], ["隆起", "リュウ起"], ["りゅう起", "リュウ起"], ["沈降", "チン降"], ["ちん降", "チン降"]];
     function syn(t){ t = t.replace(/[\s\u3000]/g, ''); SYN.forEach(function(p){ t = t.split(p[0]).join(p[1]); }); return t; }
@@ -1130,7 +1130,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     if (m === 'gnorev'){ var g = nextGnorev(); return g ? function(q){ return inRange(q, g); } : function(){ return false; }; }
     return avail;
   }
-  // 直近授業の復習: いちばん新しく取り込まれた(開いた)回。次の回が取り込まれる/開くと自動で入れ替わる。
+  // 次回復習テスト対策: いちばん新しく取り込まれた(開いた)回。次の回が取り込まれる/開くと自動で入れ替わる。
   // 予定表の review.units に回を書くと、自動判定をやめてその回に固定できる。
   function reviewUnits(){
     if (CFG.review && CFG.review.units && CFG.review.units.length) return CFG.review.units.filter(function(u){ return CFG.open[u] !== undefined; });
@@ -1173,13 +1173,13 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     }
     chip('all', 'これまで全部', 'テキスト・関連問題・仲間の科学者');
     var ru = reviewUnits();
-    if (ru.length) chip('review', '直近授業の復習', ru.map(unitLabel).join('・') + '(' + poolFor('review').length + '問)', false);
-    else { chip('review', '直近授業の復習', 'まだ取り込まれた回がありません', true); if (mode === 'review') mode = 'all'; }
+    if (ru.length) chip('review', '次回復習テスト対策', ru.map(unitLabel).join('・') + '(' + poolFor('review').length + '問)', false);
+    else { chip('review', '次回復習テスト対策', 'まだ取り込まれた回がありません', true); if (mode === 'review') mode = 'all'; }
     if (g){
       var pp = g.test.split('-'), md = (+pp[1]) + '/' + (+pp[2]);
-      chip('gnorev', '直近テストだけ', g.name + '(' + md + ')・' + (g.all ? '範囲なし(テキストの内容)' : '第' + g.from + '〜' + g.to + '回') + '・' + poolFor('gnorev').length + '問', false);
+      chip('gnorev', '次回グノレブ対策', g.name + '(' + md + ')・' + (g.all ? '範囲なし(テキストの内容)' : '第' + g.from + '〜' + g.to + '回') + '・' + poolFor('gnorev').length + '問', false);
     } else {
-      chip('gnorev', '直近テストだけ', '次のテストの範囲はまだ入っていません', true);
+      chip('gnorev', '次回グノレブ対策', '次のテストの範囲はまだ入っていません', true);
       if (mode === 'gnorev') mode = 'all';
     }
     var cb = $('counts'); cb.innerHTML = '';
@@ -1250,7 +1250,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
         var b2 = document.createElement('button'); b2.className = 'btn'; b2.type = 'button';
         var g = nextGnorev();
         if (g && !g.all && g.from === q.from && g.to === q.to){
-          b2.textContent = '「直近テストだけ」にして始める';
+          b2.textContent = '「次回グノレブ対策」にして始める';
           b2.onclick = function(){ mode = 'gnorev'; count = 20; buildHome(); window.scrollTo(0, 0); };
         } else {
           b2.textContent = '「これまで全部」で始める'; b2.onclick = function(){ mode = 'all'; buildHome(); };
