@@ -805,7 +805,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
   // ===== テキストの内容かどうか(tu: テキストの内容として出てくる回) =====
   // グノーブルのテキスト(s:'グノーブル')の問題はその回のテキスト問題。ほかの問題集の問題は、
   // 答えの用語がすべて・問題文の用語が7割以上、その回のテキスト問題に出てくれば「テキストの内容」とみなす。
-  // どの回のテキストにも出てこない問題は「関連問題」: これまで全部には出るが、次回復習テスト対策・次回グノレブ対策には出ない。
+  // どの回のテキストにも出てこない問題は「関連問題」: 全部には出るが、次回復習テスト対策・次回グノレブ対策には出ない。
   (function(){
     var SYN = [["流紋岩", "リュウモン岩"], ["安山岩", "アンザン岩"], ["玄武岩", "ゲンブ岩"], ["花こう岩", "カコウ岩"], ["花崗岩", "カコウ岩"], ["閃緑岩", "センリョク岩"], ["せん緑岩", "センリョク岩"], ["斑れい岩", "ハンレイ岩"], ["はんれい岩", "ハンレイ岩"], ["黒雲母", "クロウンモ"], ["角閃石", "カクセン石"], ["輝石", "キ石"], ["かんらん石", "カンラン石"], ["石英", "セキエイ"], ["長石", "チョウセキ"], ["凝灰岩", "ギョウ灰岩"], ["ぎょう灰岩", "ギョウ灰岩"], ["ギョウカイ岩", "ギョウ灰岩"], ["石灰岩", "セッカイ岩"], ["せっかい岩", "セッカイ岩"], ["恐竜", "キョウリュウ"], ["粘板岩", "ネンバン岩"], ["頁岩", "ケツ岩"], ["堆積", "タイ積"], ["たい積", "タイ積"], ["侵食", "シン食"], ["しん食", "シン食"], ["粘り気", "ネバリ気"], ["ねばり気", "ネバリ気"], ["ろ過", "ロ過"], ["沸騰", "フットウ"], ["ふっとう", "フットウ"], ["溶解度", "ヨウ解度"], ["よう解度", "ヨウ解度"], ["飽和", "ホウ和"], ["ほう和", "ホウ和"], ["しゅう曲", "シュウ曲"], ["褶曲", "シュウ曲"], ["隆起", "リュウ起"], ["りゅう起", "リュウ起"], ["沈降", "チン降"], ["ちん降", "チン降"]];
     function syn(t){ t = t.replace(/[\s\u3000]/g, ''); SYN.forEach(function(p){ t = t.split(p[0]).join(p[1]); }); return t; }
@@ -1167,11 +1167,10 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       b.className = 'chip'; b.type = 'button'; b.disabled = !!disabled;
       b.setAttribute('aria-pressed', mode === key ? 'true' : 'false');
       b.appendChild(document.createTextNode(title));
-      if (sub) b.title = sub;   // 細かい範囲はボタンには出さない(下の説明に出る)
       b.onclick = function(){ mode = key; buildHome(); };
       box.appendChild(b);
     }
-    chip('all', 'これまで全部', 'テキスト・関連問題・仲間の科学者');
+    chip('all', '全部', 'テキスト・関連問題・仲間の科学者');
     var ru = reviewUnits();
     if (ru.length) chip('review', '次回復習テスト対策', ru.map(unitLabel).join('・') + '(' + poolFor('review').length + '問)', false);
     else { chip('review', '次回復習テスト対策', 'まだ取り込まれた回がありません', true); if (mode === 'review') mode = 'all'; }
@@ -1210,7 +1209,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       bb.classList.remove('hide');
     } else bb.classList.add('hide');
     buildQuest();
-    var gi = $('gnoinfo'), gg = nextGnorev();
+    var gi = $('gnoinfo'), gg = null;   // 細かい範囲の説明は出さない
     if (gg){
       var pp2 = gg.test.split('-'), txt = '📝 ' + gg.name + '(' + (+pp2[1]) + '/' + (+pp2[2]) + ')の範囲: ';
       if (gg.all) txt += '特定の範囲なし(これまで全部)';
@@ -1253,7 +1252,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
           b2.textContent = '「次回グノレブ対策」にして始める';
           b2.onclick = function(){ mode = 'gnorev'; count = 20; buildHome(); window.scrollTo(0, 0); };
         } else {
-          b2.textContent = '「これまで全部」で始める'; b2.onclick = function(){ mode = 'all'; buildHome(); };
+          b2.textContent = '「全部」で始める'; b2.onclick = function(){ mode = 'all'; buildHome(); };
         }
         box.appendChild(b2);
       }
