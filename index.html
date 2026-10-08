@@ -193,6 +193,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
 .quest .qb i{display:block;height:100%;background:linear-gradient(90deg,#f59f00,#e8590c);width:0}
 .quest small{display:block;font-weight:700;font-size:12px;opacity:.85;line-height:1.5}
 .quest .btn{margin-top:8px;min-height:40px;padding:8px 12px;font-size:14px}
+.strong{font-size:13px;font-weight:700;color:var(--sub);margin:12px 0 0;line-height:1.6}.strong:empty{display:none}
 .bday{background:#ffe8f1;color:#5a1030;border:2px solid #e04f8a;border-radius:12px;padding:8px 12px;margin:0 0 10px;font-weight:800;font-size:14px}
 .gnoinfo{font-size:12px;color:var(--ink);background:var(--soft);border-radius:10px;padding:6px 10px;margin:6px 0 0;line-height:1.6}
 .toolrow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
@@ -255,6 +256,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       <div class="chips" id="modes"></div>
       <h2>問題の数</h2>
       <div class="chips" id="counts"></div>
+      <div class="strong" id="strong"></div>
       <button class="btn" id="start">スタート</button>
       <p class="info" id="dueinfo"></p>
       <div class="nextclass" id="nextclass"></div>
@@ -1218,6 +1220,15 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       if (strong.length) txt += '\nこのテストに強い仲間(えらべる人): ' + strong.slice(0, 6).map(function(j){ return j.i + j.n; }).join('、') + (strong.length > 6 ? ' ほか' : '');
       gi.textContent = txt; gi.style.whiteSpace = 'pre-line'; gi.classList.remove('hide');
     } else gi.classList.add('hide');
+    // えらんだ範囲に強い仲間(得意分野がその範囲にある・いま仲間にできる人)
+    var sg = $('strong'), su = null;
+    if (mode === 'gnorev'){ var g2 = nextGnorev(); su = g2 ? gnoUnits(g2) : []; }
+    else if (mode === 'review') su = reviewUnits();
+    if (!su) sg.textContent = '💪 この範囲に強い仲間: 全員';
+    else {
+      var st2 = SCI.filter(function(j){ return j.id !== 'me' && j.id !== 'legend' && sciState(j) !== 'locked' && spOf(j).some(function(u){ return su.indexOf(u) >= 0; }); });
+      sg.textContent = st2.length ? '💪 この範囲に強い仲間: ' + st2.slice(0, 6).map(function(j){ return j.i + j.n; }).join('、') + (st2.length > 6 ? ' ほか' + (st2.length - 6) + '人' : '') : '';
+    }
     var nc = nextClass();
     $('nextclass').textContent = nc ? '次の授業: ' + nc.md + ' ' + unitLabel(nc.u) + '(その日から問題が出ます)' : '';
   }
