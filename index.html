@@ -340,7 +340,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     <p class="lead" id="treelead"></p>
     <div class="tsum" id="treesum"></div>
     <div class="tree-sc" id="treesc"><div class="tree-in" id="treein"></div></div>
-    <p class="note" style="font-size:12px;color:var(--sub);margin-top:8px">緑=研究完成(効果がずっと続く)・黄色の点線=仲間にできる・青い枠=いまの仲間・うすい=まだ。名前を押すとカードが開きます。よこにスクロールできます。</p>
+    <p class="note" style="font-size:12px;color:var(--sub);margin-top:8px">緑=研究完成・青=研究チーム・黄色=チームに入れられる</p>
   </div>
 </section>
 <div id="scicard" class="hide"></div>
@@ -1262,7 +1262,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       var st2 = SCI.filter(function(j){ return j.id !== 'me' && j.id !== 'legend' && sciState(j) !== 'locked' && spOf(j).some(function(u){ return su.indexOf(u) >= 0; }); });
       var tsg = teamOf().filter(function(j){ return spOf(j).some(function(u){ return su.indexOf(u) >= 0; }); });
       var oth = st2.filter(function(j){ return !inTeam(j.id); });
-      sg.textContent = (tsg.length ? '🧪 研究チームで得意: ' + tsg.map(function(j){ return j.i + j.n; }).join('・') + '(得意分野の問題 +' + (50 * tsg.length) + '%)' : '🧪 研究チームにこの範囲が得意な人がいません') +
+      sg.textContent = (tsg.length ? '🧪 研究チームで得意: ' + tsg.map(function(j){ return j.i + j.n; }).join('・') : '🧪 研究チームにこの範囲が得意な人はいません') +
         (oth.length ? '\n💪 この範囲に強い仲間: ' + oth.slice(0, 6).map(function(j){ return j.i + j.n; }).join('、') + (oth.length > 6 ? ' ほか' + (oth.length - 6) + '人' : '') : '');
       sg.style.whiteSpace = 'pre-line';
     }
@@ -1284,16 +1284,16 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       if (done){
         box.className = 'quest done';
         t1.textContent = '✅ ' + q.title + ' クリア!';
-        sm.textContent = j.i + ' ' + j.n + ' を仲間にできるよ!';
+        sm.textContent = j.i + ' ' + j.n + ' が仲間に!';
         var b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = j.n + 'のカードを見る';
         b.onclick = function(){ openCard(j); }; box.appendChild(b);
       } else {
         box.className = 'quest';
         var n = Math.min(st.n || 0, q.need);
-        t1.textContent = '🚨 ' + q.title + '(' + span + ')';
-        sm.textContent = q.label + '(第' + q.from + '〜' + q.to + '回)の問題に' + q.need + '問 正解すると、特別な科学者 ' + j.i + ' ' + j.n + ' が仲間になる!(1回目の答えだけ数えます。やり直しは数えません)';
+        t1.textContent = '🚨 ' + q.title;
+        sm.textContent = '次回グノレブ範囲の問題に' + q.need + '問正解で、特別な科学者 ' + j.i + ' ' + j.n + ' が仲間に!';
         var bar = document.createElement('div'); bar.className = 'qb'; var bi = document.createElement('i'); bi.style.width = (n / q.need * 100) + '%'; bar.appendChild(bi); box.appendChild(bar);
-        var pr = document.createElement('small'); pr.textContent = '正解 ' + n + ' / ' + q.need + '問・あと' + (q.need - n) + '問・' + (q.end === todayJST() ? '今日まで!' : '〜' + (+pe[1]) + '/' + (+pe[2]) + 'まで'); box.appendChild(pr);
+        var pr = document.createElement('small'); pr.textContent = n + ' / ' + q.need + '問' + (q.end === todayJST() ? '・今日まで!' : ''); box.appendChild(pr);
         var b2 = document.createElement('button'); b2.className = 'btn'; b2.type = 'button';
         var g = nextGnorev();
         if (g && !g.all && g.from === q.from && g.to === q.to){
@@ -1518,8 +1518,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     checkSciClear();
     var box = $('scitiers'); box.innerHTML = '';
     var tm0 = teamOf(), n = Object.keys(P.scis || {}).length;
-    $('scislead').textContent = '研究チーム: ' + tm0.map(function(j){ return j.i + j.n + (sciCleared(j.id) ? '(完成)' : '(Lv' + savedLv(j.id) + ')'); }).join('・') + '・研究が完成した仲間 ' + n + ' / ' + SCI.length +
-      '。チームには' + TEAM_MAX + '人まで入れられて、レベルが1上がるごとに全員の研究が進みます(' + RK + 'レベルで完成。チームから外しても研究は保存されます)。' + (n ? ' 🌟研究の成果: ぜんぶの問題で +' + globalPct() + '%(完成1人ごとに+' + GL_PCT + '%・各時代の仲間が全員完成すると+' + TIER_PCT + '%)。さらに、完成した仲間の得意分野の問題は1人ごとに+' + SP_PCT + '%、ずっと続きます。' : ' 研究が完成した仲間の効果は、ずっと続きます(完成1人ごとに全問題+' + GL_PCT + '%、その人の得意分野はさらに+' + SP_PCT + '%)。') + ' カードを押すと、その科学者のことがわかります。「📝テスト向き」は次のテスト範囲が得意分野の科学者。チームのメンバーの得意分野の問題に正解すると、得意なメンバー1人ごとにポイント+50%!';
+    $('scislead').textContent = '研究チームに入れると、その科学者の得意分野の問題に強くなる。研究が完成すると、効果はずっと続くよ。「📝テスト向き」の科学者もいるよ。';
     for (var t = 0; t <= 8; t++){
       var js = SCI.filter(function(j){ return j.t === t; }); if (!js.length) continue;
       if (t === 8 && !js.some(sciVis)) continue;
@@ -1561,22 +1560,22 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     var deed = document.createElement('div'); deed.className = 'deed'; deed.textContent = '偉業: ' + j.d; card.appendChild(deed);
     if (j.id !== 'me'){
       var spp = document.createElement('p'); spp.className = 'note';
-      spp.textContent = '得意分野: ' + (spLabel(j) || 'なし') + (gnoStrong(j) ? '(次のテストに強い!)' : '') + (j.bd ? ' ／ 誕生日: ' + bdText(j) + (isBday(j) ? ' 🎂今日!' : '') : '');
+      spp.textContent = '得意分野: ' + (spLabel(j) || 'なし') + (gnoStrong(j) ? ' 📝テスト向き!' : '') + (j.bd ? ' ／ 誕生日: ' + bdText(j) + (isBday(j) ? ' 🎂今日!' : '') : '');
       card.appendChild(spp);
     }
     if (j.id !== 'me'){
       var pm = document.createElement('p'); pm.className = 'note';
-      pm.textContent = '研究チームにいるとき: 得意分野の問題+50% ／ ' + (sciCleared(j.id) ? '🌟研究の成果(ずっと有効): ' : '研究が完成すると、ずっと有効: ') + 'ぜんぶの問題+' + GL_PCT + '%・得意分野の問題+' + SP_PCT + '%';
+      pm.textContent = sciCleared(j.id) ? '🌟研究完成! 効果はずっと続くよ。' : '研究が完成すると、効果がずっと続くよ。';
       card.appendChild(pm);
     }
     var ul = document.createElement('ul'); j.facts.forEach(function(f){ var li = document.createElement('li'); li.textContent = f; ul.appendChild(li); }); card.appendChild(ul);
     if (j.quest && !qUnlocked(j)){
       var qq1 = questOfSci(j), qn1 = document.createElement('p'); qn1.className = 'note';
-      qn1.textContent = '🚨 緊急クエスト: ' + qq1.label + '(第' + qq1.from + '〜' + qq1.to + '回)の問題に' + qq1.need + '問 正解すると仲間にできる。いま ' + Math.min(qState(qq1).n || 0, qq1.need) + ' / ' + qq1.need + '問。';
+      qn1.textContent = '🚨 次回グノレブ範囲の問題に' + qq1.need + '問正解で仲間に!(いま ' + Math.min(qState(qq1).n || 0, qq1.need) + '問)';
       card.appendChild(qn1);
     }
     var note = document.createElement('p'); note.className = 'note';
-    if (j.quiz.length) note.textContent = '仲間になると、この科学者についての問題(' + j.quiz.length + '問)が一問一答に出てくるよ。';
+    if (j.quiz.length) note.textContent = 'チームに入れると、この科学者の問題も出てくるよ。';
     card.appendChild(note);
     var mvs = MOVES[j.id] || [];
     if (mvs.length){
@@ -1616,13 +1615,13 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
         var no = document.createElement('button'); no.className = 'btn ghost'; no.type = 'button'; no.textContent = 'やめる';
         no.onclick = function(){ openCard(j); };
         if (tm.length < TEAM_MAX || meOnly){
-          ask.textContent = j.i + ' ' + j.n + ' を研究チームに入れますか? ' + note2;
+          ask.textContent = j.i + ' ' + j.n + ' を研究チームに入れる?';
           var yes = document.createElement('button'); yes.className = 'btn'; yes.type = 'button'; yes.textContent = 'はい、入れる';
           yes.disabled = true; setTimeout(function(){ yes.disabled = false; }, 600);   // つづけて連打しても決まらない
           yes.onclick = function(){ joinTeam(j.id); after(true); };
           row.appendChild(no); row.appendChild(yes);
         } else {
-          ask.textContent = 'チームは' + TEAM_MAX + '人までです。だれと交代しますか? (外れた人の研究は保存されます) ' + note2;
+          ask.textContent = 'チームは' + TEAM_MAX + '人まで。だれと交代する?(研究はそのまま残るよ)';
           row.appendChild(no);
           tm.forEach(function(m){
             var sw = document.createElement('button'); sw.className = 'btn'; sw.type = 'button'; sw.textContent = m.i + ' ' + m.n + 'と交代' + (sciCleared(m.id) ? '(完成)' : '');
@@ -1666,7 +1665,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
   // ===== 研究ツリー =====
   function openTree(){
     var tn = SCI.filter(function(j){ return j.id !== 'me' && (!j.quest || sciVis(j)); }).length, cl = clearedList().length;
-    $('treelead').textContent = '研究が完成した仲間の効果は、ずっと続きます。完成 ' + cl + ' / ' + tn + '人。';
+    $('treelead').textContent = '研究完成 ' + cl + ' / ' + tn + '人。完成した仲間の効果はずっと続くよ。';
     var sm = $('treesum'); sm.innerHTML = '';
     function chipT(t){ var e = document.createElement('span'); e.textContent = t; sm.appendChild(e); }
     chipT('🌟 ぜんぶの問題 +' + globalPct() + '%');
@@ -1683,7 +1682,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       var x = PAD + t * (W + GX);
       var h = document.createElement('div'); h.className = 'th' + (t > 0 && t < 8 && tierDone(t) ? ' done' : ''); h.style.left = x + 'px';
       var done = c.filter(function(j){ return sciCleared(j.id); }).length;
-      h.textContent = TIERNAME[t] + (t === 8 ? '\n' + done + '/' + c.length : t > 0 ? '\n' + done + '/' + c.length + (tierDone(t) ? ' 達成+' + TIER_PCT + '%' : ' 全員で+' + TIER_PCT + '%') : '');
+      h.textContent = TIERNAME[t] + (t > 0 ? '\n' + done + '/' + c.length + (t < 8 && tierDone(t) ? ' 達成!' : '') : '');
       h.style.whiteSpace = 'pre-line'; box.appendChild(h);
       c.forEach(function(j, k){ pos[j.id] = {x: x, y: TOP + k * (NH + GY)}; });
     });
