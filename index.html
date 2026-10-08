@@ -1519,9 +1519,9 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
     var box = $('scitiers'); box.innerHTML = '';
     var tm0 = teamOf(), n = Object.keys(P.scis || {}).length;
     $('scislead').textContent = '研究チームに入れると、その科学者の得意分野の問題に強くなる。研究が完成すると、効果はずっと続くよ。「📝テスト向き」の科学者もいるよ。';
-    for (var t = 0; t <= 8; t++){
-      var js = SCI.filter(function(j){ return j.t === t; }); if (!js.length) continue;
-      if (t === 8 && !js.some(sciVis)) continue;
+    [8, 0, 1, 2, 3, 4, 5, 6, 7].forEach(function(t){   // 緊急クエストの科学者がいちばん上
+      var js = SCI.filter(function(j){ return j.t === t; }); if (!js.length) return;
+      if (t === 8 && !js.some(sciVis)) return;
       var sec = document.createElement('div'); sec.className = 'tier';
       var h = document.createElement('h3'); h.textContent = TIERNAME[t]; sec.appendChild(h);
       var grid = document.createElement('div'); grid.className = 'jgrid';
@@ -1547,7 +1547,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
         grid.appendChild(b);
       });
       sec.appendChild(grid); box.appendChild(sec);
-    }
+    });
     $('scis').classList.remove('hide'); window.scrollTo(0,0);
   }
   function openCard(j, justJoined){
