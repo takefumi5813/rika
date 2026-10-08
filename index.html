@@ -1167,7 +1167,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       b.className = 'chip'; b.type = 'button'; b.disabled = !!disabled;
       b.setAttribute('aria-pressed', mode === key ? 'true' : 'false');
       b.appendChild(document.createTextNode(title));
-      if (sub){ var s = document.createElement('small'); s.textContent = sub; b.appendChild(s); }
+      if (sub) b.title = sub;   // 細かい範囲はボタンには出さない(下の説明に出る)
       b.onclick = function(){ mode = key; buildHome(); };
       box.appendChild(b);
     }
