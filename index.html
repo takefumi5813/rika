@@ -1859,7 +1859,6 @@ function openPortraitGallery(){
   initSci();
   buildHome();
 
-var galleryButton=document.createElement('button');galleryButton.className='btn ghost';galleryButton.type='button';galleryButton.textContent='キャラクター一覧（全113枠）';galleryButton.style.margin='0 0 12px';galleryButton.onclick=openPortraitGallery;$('scibtn').insertAdjacentElement('afterend',galleryButton);
 if(new URLSearchParams(location.search).get('portraits')==='all')openPortraitGallery();
 
   // 予定表(schedule.json)があれば読み込んで、授業日に合わせて回を開く
