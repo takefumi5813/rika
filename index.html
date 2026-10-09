@@ -1018,10 +1018,18 @@ function openPortraitGallery(){
   // 仲間の一問一答を問題プールに足す（その科学者が仲間になってから出る）
   SCI.forEach(function(sc){ sc.quiz.forEach(function(qq, i){ DATA.push({id:'SCI-' + sc.id + '-' + i, s:'仲間の科学者', f:'偉人', sid:sc.id, u:['偉人'], tu:[], q:qq.q, a:qq.a}); }); });
 
-  // ===== 出題間隔(正解した回数＝ランク → 出題されない期間) =====
+  // ===== 出題間隔(正解した回数＝ランク → 次に出題できるまでの日数) =====
+  // 1回目の正解→3日後、2回目→10日後、3回目→1か月後、4回目以降→4か月後(その日の0時(日本時間)から出題)
   var HOUR = 3600e3, DAY = 24*HOUR;
-  var WAIT = [0, 12*HOUR, 24*HOUR, 7*DAY, 30*DAY, 90*DAY, 180*DAY];
-  var MAXL = 6;
+  var WAIT_DAYS = [0, 3, 10, 30, 120];
+  var MAXL = 4;
+  function dueAt(l){
+    var days = WAIT_DAYS[Math.min(l, MAXL)] || 0;
+    if (!days) return Date.now();
+    var jst = Date.now() + 9*HOUR;
+    return (Math.floor(jst / DAY) + days) * DAY - 9*HOUR;
+  }
+  var WAIT = WAIT_DAYS.map(function(n){ return n * DAY; });
 
   function $(id){ return document.getElementById(id); }
   function todayJST(){ return new Date(Date.now() + 9*HOUR).toISOString().slice(0,10); }
@@ -1066,6 +1074,8 @@ function openPortraitGallery(){
   var S = load(KEY, {});
   var P = load(PKEY, {xp:0, mute:false, day:'', streak:0});
   function saveS(){ save(KEY, S); }
+  function fixS(){ var ch = false; Object.keys(S).forEach(function(k){ var s = S[k]; if (!s) return; if (s.l > MAXL){ s.l = MAXL; ch = true; } var lim = dueAt(s.l); if (s.d > lim){ s.d = lim; ch = true; } }); return ch; }
+  if (fixS()) saveS();
   function saveP(){ save(PKEY, P); }
   function isDue(q){ var s = S[q.id]; return !s || s.d <= Date.now(); }
 
@@ -1648,7 +1658,7 @@ function openPortraitGallery(){
       first++;
       var L = (S[q.id] && S[q.id].l) || 0;
       L2 = ok ? Math.min(L + 1, MAXL) : Math.max(L - 1, 0);
-      S[q.id] = {l: L2, d: Date.now() + WAIT[L2]};
+      S[q.id] = {l: L2, d: ok ? dueAt(L2) : Date.now()};
       saveS();
       if (ok){ right++; rankUp = L2 > L; var qg = questCount(q); if (qg){ questNow = qg; setTimeout(function(){ var m2 = document.createElement('div'); m2.className = 'act'; m2.style.top = '78%'; m2.style.background = '#e8590c'; m2.style.color = '#fff'; m2.textContent = '🚨 ' + qg.title + ' クリア! ' + SCIMAP[qg.sci].n + 'が仲間にできる!'; fx.appendChild(m2); tone([659, 784, 988, 1319], 0.1); }, 500); } } else wrongs.push(q);
     }
@@ -2004,7 +2014,7 @@ function openPortraitGallery(){
       Object.keys(o.S || {}).forEach(function(k){ var a = S[k], b = o.S[k]; if (!a || (b && (b.l > a.l || (b.l === a.l && b.d > a.d)))){ S[k] = b; n++; } });
       if (o.P){ if ((o.P.xp || 0) > (P.xp || 0)){ P.xp = o.P.xp; P.sci = o.P.sci || P.sci; P.sciStart = o.P.sciStart || P.sciStart; if (o.P.team) P.team = o.P.team; P.rlv = o.P.rlv || lvOf(P.xp).lv; } var rpm = Object.assign({}, o.P.rp || {}); Object.keys(P.rp || {}).forEach(function(k){ rpm[k] = Math.max(rpm[k] || 0, P.rp[k]); }); P.rp = rpm; P.scis = Object.assign({}, o.P.scis || {}, P.scis || {}); var pr = Object.assign({}, o.P.prog || {}); Object.keys(P.prog || {}).forEach(function(k){ pr[k] = Math.max(pr[k] || 0, P.prog[k]); }); P.prog = pr; P.streak = Math.max(P.streak || 0, o.P.streak || 0);
         var qm = Object.assign({}, o.P.quests || {}); Object.keys(P.quests || {}).forEach(function(k){ var a = qm[k] || {n:0, done:false}, b = P.quests[k]; qm[k] = {n: Math.max(a.n || 0, b.n || 0), done: !!(a.done || b.done), at: b.at || a.at}; }); P.quests = qm; }
-      saveS(); saveP(); initSci(); buildHome();
+      fixS(); saveS(); saveP(); initSci(); buildHome();
       $('bkmsg').textContent = '読み込みました(' + n + '問分を更新)。';
     } catch(e){ $('bkmsg').textContent = 'コードが読めません。「コードを出す」で出た文字を、そのまま全部貼りつけてください。'; }
   };
