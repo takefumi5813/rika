@@ -92,3 +92,45 @@ body:has(#scis:not(.hide),#tree:not(.hide),#portrait-gallery){overflow:hidden}
 .portrait-toolbar{border-bottom:1px solid var(--line);padding-bottom:12px}
 @media(max-width:380px){.wrap{padding:16px 12px 28px}.panel{padding:19px 15px}.chip{padding:9px 11px}.scibar{gap:7px;padding:10px}.scibar .jgo{max-width:60px}.hud{flex-wrap:wrap}.rank{font-size:16px}.hero-scientists{gap:9px}.jgrid{gap:8px}.job{padding:9px}.row{gap:8px}.row .btn{padding:12px 8px;font-size:15px}}
 @media(prefers-reduced-motion:reduce){.btn,.chip{transition:none}.btn:active:not(:disabled){transform:none}}
+
+/* Laboratory scene and quiet, readable study surfaces. */
+body{font-family:"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background-image:linear-gradient(#102d2bd9,#102d2bf0),url('assets/laboratory.jpg');background-size:cover;background-position:center;background-attachment:fixed}
+.wrap{max-width:720px;padding:28px 24px 40px}
+body:has(#opening:not(.hide)){background-image:linear-gradient(90deg,#0b2526b3,#0b252633),url('assets/laboratory.jpg')}
+body:has(#opening:not(.hide))>.wrap{max-width:1180px;padding:0 48px}
+#opening{min-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;align-items:center;color:#fff9eb}
+.opening-copy{max-width:530px;padding:64px 0}
+.opening-kicker{font-size:11px;letter-spacing:.3em;color:#e0d8bb;margin:0 0 24px}
+#opening h1{font-family:'Yuji Syuku',serif;font-size:clamp(38px,6vw,66px);font-weight:400;letter-spacing:.07em;line-height:1.5;margin:0;text-shadow:0 2px 16px #071d1d60}
+.opening-subtitle{font-size:14px;letter-spacing:.1em;margin:18px 0 44px;color:#fff6e3}
+#continue-research{display:flex;justify-content:space-between;align-items:center;gap:48px;width:300px;max-width:100%;min-height:62px;background:#f6f0dd;color:#183c38;border:1px solid #d1b979;font-weight:700;box-shadow:0 8px 30px #061a2040;border-radius:6px;padding:16px 24px}
+#home>.hud,#play>.meta{color:#fff4df;border-color:#ffffff30}
+.hud .pt,#play>.meta .link{color:#e5e8dd}
+.hud .lv,.mute{background:var(--card);color:var(--ink)}
+.notebook-hero{text-align:left;border:0;padding:0;margin:0 0 24px;color:#fff4df}
+.notebook-hero::before{display:none}.notebook-hero h1{font-size:30px;margin:0}
+.notebook-kicker{font-size:10px;color:#e0d8bb;letter-spacing:.22em;margin-bottom:7px}
+#to-opening{float:right;color:#e0d8bb;font-size:12px;text-decoration:none;padding-right:0}
+.panel{border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 48px #061b2029;padding:28px}.panel::before,.panel h2::before{display:none}
+.panel h2{font-size:12px;letter-spacing:.08em}
+.btn,.btn.ghost{box-shadow:none;border-radius:7px;font-weight:700}
+.chip{border-radius:7px;font-weight:600}.chip[aria-pressed="true"]{box-shadow:none}
+.scibar{display:block;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:20px;box-shadow:none}
+.team-heading{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sub);margin-bottom:16px}
+.team-portraits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;max-width:390px;margin:auto}
+.team-member{display:block;text-align:center;min-width:0}.team-member .sci-portrait{width:100%;border-radius:8px}
+.team-name{display:block;font-size:12px;line-height:1.5;margin-top:8px;overflow-wrap:anywhere;color:var(--ink)}
+.toolrow{flex-wrap:nowrap}.toolrow .btn{min-width:0;font-size:12px;flex:1}.menu-art{width:26px;height:26px}
+#home .foot,#home .foot .link{color:#d8e2da}#home .foot{opacity:.85}#home .resetbox{color:var(--ink);background:var(--card);padding:16px;border-radius:8px}
+#scis,#tree,#portrait-gallery{background-image:none}
+#scis .jgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 18px}
+#scis .job{appearance:none;background:none;border:0;border-radius:8px;box-shadow:none;padding:0;min-width:0;color:var(--ink);font:inherit;cursor:pointer;text-align:center}
+#scis .job .ji{font-size:34px;line-height:1;min-height:70px;display:grid;place-items:center;margin:0}
+#scis .job .sci-portrait{border:1px solid var(--line);border-radius:8px;margin:0 0 8px;filter:none}
+#scis .job b{display:block;font-size:12px;line-height:1.5;font-weight:500}
+#scis .job.current .sci-portrait{outline:2px solid var(--primary);outline-offset:3px}
+#scis .job.locked{opacity:.5;cursor:default}#scis .job.next{opacity:.85}
+#scis .tier h3{font-size:12px;font-weight:500;margin-top:30px;color:var(--sub)}
+#scislead{font-size:12px;margin-top:16px}.research-status{font-size:13px;color:var(--primary);padding:10px 0;border-block:1px solid var(--line)}
+.card{border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 70px #0004}.card h3{font-size:26px}
+@media(max-width:600px){body:has(#opening:not(.hide))>.wrap{padding:0 28px}body:has(#opening:not(.hide)){background-image:linear-gradient(0deg,#092526e6,#09252666 65%,#09252620),url('assets/laboratory.jpg');background-position:62% center}#opening{align-items:flex-end}.opening-copy{padding:80px 0 64px;width:100%}.opening-kicker{margin-bottom:16px}#opening h1{font-size:40px}.opening-subtitle{font-size:12px;margin:12px 0 30px}#continue-research{width:100%}.wrap{padding:20px 16px 32px}.panel{padding:22px 18px}.notebook-hero h1{font-size:28px}.team-portraits{gap:14px}.scibar{padding:16px 18px}.toolrow .btn{flex-direction:column;font-size:11px;padding:12px 6px}.q{font-size:22px;line-height:1.8}.team-name{font-size:11px}#scis .jgrid{gap:22px 14px}}
