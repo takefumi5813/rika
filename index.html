@@ -193,6 +193,14 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
 .quest .qb i{display:block;height:100%;background:linear-gradient(90deg,#f59f00,#e8590c);width:0}
 .quest small{display:block;font-weight:700;font-size:12px;opacity:.85;line-height:1.5}
 .quest .btn{margin-top:8px;min-height:40px;padding:8px 12px;font-size:14px}
+.quest.daily{background:#e8f1ff;border-color:#1a5fd8;color:#0d2a5c}
+.quest.daily .qb i{background:linear-gradient(90deg,#4dabf7,#1a5fd8)}
+.quest.daily.done{background:#e6f7ee;border-color:#1b8a5a;color:#0e3d28}
+.dstamps{display:flex;gap:4px;margin:8px 0 2px}
+.dstamps span{flex:1;height:24px;border-radius:6px;background:rgba(0,0,0,.08);text-align:center;font-size:12px;line-height:24px;font-weight:900;color:rgba(0,0,0,.35)}
+.dstamps span.on{background:#1a5fd8;color:#fff}
+.quest.daily.done .dstamps span.on{background:#1b8a5a}
+.dq{font-size:12px;font-weight:900}
 .strong{font-size:13px;font-weight:700;color:var(--sub);margin:12px 0 0;line-height:1.6}.strong:empty{display:none}
 .bday{background:#ffe8f1;color:#5a1030;border:2px solid #e04f8a;border-radius:12px;padding:8px 12px;margin:0 0 10px;font-weight:800;font-size:14px}
 .gnoinfo{font-size:12px;color:var(--ink);background:var(--soft);border-radius:10px;padding:6px 10px;margin:6px 0 0;line-height:1.6}
@@ -413,6 +421,7 @@ body:has(#opening:not(.hide))>.wrap{max-width:1180px;padding:0 48px}
       <span class="team-portraits" id="team-portraits"></span>
     </button>
     <div class="panel">
+      <div class="quest daily" id="daily"></div>
       <h2>どこから出す?</h2>
       <div class="quest hide" id="quest"></div>
       <div class="bday hide" id="bday"></div>
@@ -443,7 +452,7 @@ body:has(#opening:not(.hide))>.wrap{max-width:1180px;padding:0 48px}
   </section>
 
   <section id="play" class="hide">
-    <div class="meta"><span id="pos"></span><span class="combo" id="combo"></span><button class="link" id="quit">やめる</button></div>
+    <div class="meta"><span id="pos"></span><span class="combo" id="combo"></span><span class="dq" id="dq"></span><button class="link" id="quit">やめる</button></div>
     <div class="enemy" id="enemy"><span class="eicon" id="eicon"></span><span class="ename" id="ename"></span><span class="ehp"><i id="ehp"></i></span><span class="ehpn" id="ehpn"></span></div>
     <div class="undo"><button class="link hide" id="undo" type="button">← 押しまちがえた(ひとつ前にもどる)</button></div>
     <div class="bar"><i id="prog"></i></div>
@@ -475,6 +484,7 @@ body:has(#opening:not(.hide))>.wrap{max-width:1180px;padding:0 48px}
       <div class="score"><span id="sc"></span><small> / <span id="tot"></span></small></div>
       <p class="msg" id="rmsg"></p>
       <p class="lvup" id="rpt"></p>
+      <div id="dailyclear" class="jobclear hide"><p id="dailyclearmsg"></p></div>
       <div id="questclear" class="jobclear hide"><p id="questclearmsg"></p><button class="btn" id="toquest">ルシャトリエのカードを見る</button></div>
       <div id="jobclear" class="jobclear hide"><p id="jobclearmsg"></p><button class="btn" id="toscis">研究チームを入れかえる</button></div>
       <div id="wrongwrap" class="hide">
@@ -1456,6 +1466,7 @@ function openPortraitGallery(){
         (bd.some(function(j){ return inTeam(j.id); }) ? ' 研究チームにいるので、今日はポイント2倍!' : ' 研究チームに入れると今日はポイント2倍。');
       bb.classList.remove('hide');
     } else bb.classList.add('hide');
+    buildDaily();
     buildQuest();
     var gi = $('gnoinfo'), gg = null;   // 細かい範囲の説明は出さない
     if (gg){
@@ -1530,6 +1541,59 @@ function openPortraitGallery(){
     saveP();
     return got;
   }
+  // ===== デイリークエスト =====
+  // 1日(日本時間の0時で切りかわる)に DAILY_NEED 問やるとクリア。正解でもまちがいでも1問(やり直しの出題は数えない)。
+  // 報酬: ポイント(れんぞくクリアで1日20ptずつふえて最大200pt)+研究チーム全員の研究+1。7日れんぞくごとに研究+3。
+  var DAILY_NEED = 50, DAILY_WEEK = 7, dailyNow = null;
+  function yesterdayJST(){ return new Date(Date.now() + 9*HOUR - DAY).toISOString().slice(0,10); }
+  function dState(){
+    var t = todayJST(), d = P.daily || (P.daily = {day:'', n:0, done:false, total:0, streak:0, last:''});
+    if (d.day !== t){ d.day = t; d.n = 0; d.done = false; d.rw = null; }
+    return d;
+  }
+  // 今のれんぞくクリア日数(きのうも今日もクリアしていなければ0)
+  function dailyStreak(){ var d = dState(); return (d.last === d.day || d.last === yesterdayJST()) ? (d.streak || 0) : 0; }
+  // 今日クリアしたら何日れんぞくになるか
+  function dailyStreakNext(){ var d = dState(); return d.last === d.day ? (d.streak || 1) : (d.last === yesterdayJST() ? (d.streak || 0) + 1 : 1); }
+  function dailyReward(st){ st = Math.max(1, st); return {pts: 100 + 20 * (Math.min(st, 6) - 1), rs: st % DAILY_WEEK === 0 ? 3 : 1, week: st % DAILY_WEEK === 0}; }
+  // チーム全員の研究を n 進める。研究が完成した科学者を返す
+  function addResearch(n){
+    var got = []; P.rp = P.rp || {}; P.scis = P.scis || {};
+    teamIds().forEach(function(id){ if (sciCleared(id)) return; P.rp[id] = (P.rp[id] || 0) + n; if (P.rp[id] >= rkOf(id)){ P.scis[id] = 1; got.push(SCIMAP[id]); } });
+    saveP(); return got;
+  }
+  function dailyCount(){
+    var d = dState(); d.n = (d.n || 0) + 1;
+    if (!d.done && d.n >= DAILY_NEED){
+      var st = dailyStreakNext(), rw = dailyReward(st);
+      d.done = true; d.streak = st; d.last = d.day; d.total = (d.total || 0) + 1; d.rw = rw;
+      var got = addXp(rw.pts).concat(addResearch(rw.rs));
+      saveP(); return {rw:rw, streak:st, got:got};
+    }
+    saveP(); return null;
+  }
+  function rwText(rw){ return '+' + rw.pts + 'pt・研究チーム全員の研究+' + rw.rs + (rw.week ? '(' + DAILY_WEEK + '日れんぞくボーナス!)' : ''); }
+  function buildDaily(){
+    var d = dState(), box = $('daily'); box.innerHTML = '';
+    box.className = 'quest daily' + (d.done ? ' done' : '');
+    var t1 = document.createElement('div'); t1.className = 'qt'; box.appendChild(t1);
+    var sm = document.createElement('small'); box.appendChild(sm);
+    if (d.done){
+      t1.textContent = '✅ デイリークエスト クリア!';
+      sm.textContent = '今日の報酬: ' + rwText(d.rw || dailyReward(d.streak)) + '。また明日も' + DAILY_NEED + '問やろう!';
+    } else {
+      var n = Math.min(d.n || 0, DAILY_NEED), nx = dailyReward(dailyStreakNext());
+      t1.textContent = '📅 デイリークエスト';
+      sm.textContent = '今日' + DAILY_NEED + '問やるとクリア! 報酬: ' + rwText(nx);
+      var bar = document.createElement('div'); bar.className = 'qb'; var bi = document.createElement('i'); bi.style.width = (n / DAILY_NEED * 100) + '%'; bar.appendChild(bi); box.appendChild(bar);
+      var pr = document.createElement('small'); pr.textContent = n + ' / ' + DAILY_NEED + '問(あと' + (DAILY_NEED - n) + '問)'; box.appendChild(pr);
+    }
+    var s = dailyStreak(), on = s ? ((s - 1) % DAILY_WEEK) + 1 : 0;
+    var row = document.createElement('div'); row.className = 'dstamps';
+    for (var k = 1; k <= DAILY_WEEK; k++){ var c = document.createElement('span'); c.className = k <= on ? 'on' : ''; c.textContent = k <= on ? '✓' : (k === DAILY_WEEK ? '🎁' : k); row.appendChild(c); }
+    box.appendChild(row);
+    var ss = document.createElement('small'); ss.textContent = (s ? 'れんぞくクリア ' + s + '日' : 'れんぞくクリア 0日') + '・これまで ' + (d.total || 0) + '回クリア'; box.appendChild(ss);
+  }
   function openUnits(){ return Object.keys(CFG.open).filter(function(u){ return CFG.open[u] && isOpen(u); }); }
   function newlyOpened(){
     var seen = P.seenOpen;
@@ -1563,7 +1627,7 @@ function openPortraitGallery(){
       pool = shuffle(sel);
     }
     queue = pool.map(function(q){ return {q:q, retry:false}; });
-    pos = 0; first = 0; init = queue.length; right = 0; wrongs = []; combo = 0; gainedTotal = 0; busy = false; last = null; sciClearedNow = null; questNow = null;
+    pos = 0; first = 0; init = queue.length; right = 0; wrongs = []; combo = 0; gainedTotal = 0; busy = false; last = null; sciClearedNow = null; questNow = null; dailyNow = null;
     var t = todayJST();
     if (P.day !== t){
       var y = new Date(Date.now() + 9*HOUR - DAY).toISOString().slice(0,10);
@@ -1612,6 +1676,7 @@ function openPortraitGallery(){
       $('prog').style.width = (first / init * 100) + '%';
     }
     $('combo').textContent = combo >= 2 ? combo + 'れんぞく中' : '';
+    var dd = dState(); $('dq').textContent = dd.done ? '📅クリア' : '📅 今日 ' + dd.n + '/' + DAILY_NEED;
     $('tag').textContent = q.f; $('tag').className = 'tag ' + (FCLS[q.f] || '');
     var g = mode === 'gnorev' ? nextGnorev() : null;
     var uo = (g && q.u.filter(function(u){ return /^\d+$/.test(u) && +u >= g.from && +u <= g.to && isOpen(u); })[0]) || q.u.filter(isOpen)[0] || q.u[0];
@@ -1641,7 +1706,7 @@ function openPortraitGallery(){
   function undo(){
     if (!last || busy) return;
     pos = last.pos; first = last.first; right = last.right; wrongs.length = last.nw; combo = last.combo; gainedTotal = last.gt;
-    P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); saveP(); sciClearedNow = last.jc; questNow = last.qn;
+    P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); var dy0 = JSON.parse(last.dy); if (dy0) P.daily = dy0; else delete P.daily; saveP(); sciClearedNow = last.jc; questNow = last.qn; dailyNow = last.dn;
     if (E){ E.hp = last.ehp; E.dead = last.edead; drawEnemy(); }
     if (last.s) S[last.sid] = last.s; else delete S[last.sid];
     saveS(); last = null; clearFx();
@@ -1653,13 +1718,19 @@ function openPortraitGallery(){
     if (busy) return;
     var it = queue[pos], q = it.q, gained = 0, rankUp = false, L2 = 0, waitMs = 1500;
     last = {pos:pos, first:first, right:right, nw:wrongs.length, combo:combo, gt:gainedTotal, xp:P.xp, sid:q.id, s:S[q.id] ? {l:S[q.id].l, d:S[q.id].d} : null,
-            ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), rp:JSON.stringify(P.rp || {}), rlv:P.rlv, jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow};
+            ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), rp:JSON.stringify(P.rp || {}), rlv:P.rlv, jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow, dy:JSON.stringify(P.daily || null), dn:dailyNow};
     if (!it.retry){
       first++;
       var L = (S[q.id] && S[q.id].l) || 0;
       L2 = ok ? Math.min(L + 1, MAXL) : Math.max(L - 1, 0);
       S[q.id] = {l: L2, d: ok ? dueAt(L2) : Date.now()};
       saveS();
+      var dq = dailyCount();
+      if (dq){
+        dailyNow = dq; gainedTotal += dq.rw.pts;
+        if (dq.got.length) sciClearedNow = (sciClearedNow || []).concat(dq.got);
+        setTimeout(function(){ var m3 = document.createElement('div'); m3.className = 'act'; m3.style.top = '86%'; m3.style.background = '#1a5fd8'; m3.style.color = '#fff'; m3.textContent = '📅 デイリークエスト クリア! ' + rwText(dq.rw); fx.appendChild(m3); tone([587, 740, 880, 1175], 0.1); }, 700);
+      }
       if (ok){ right++; rankUp = L2 > L; var qg = questCount(q); if (qg){ questNow = qg; setTimeout(function(){ var m2 = document.createElement('div'); m2.className = 'act'; m2.style.top = '78%'; m2.style.background = '#e8590c'; m2.style.color = '#fff'; m2.textContent = '🚨 ' + qg.title + ' クリア! ' + SCIMAP[qg.sci].n + 'が仲間にできる!'; fx.appendChild(m2); tone([659, 784, 988, 1319], 0.1); }, 500); } } else wrongs.push(q);
     }
     if (ok){
@@ -1717,6 +1788,10 @@ function openPortraitGallery(){
     $('again').textContent = more ? 'つづける' : 'ぜんぶおわり';
     if (r === 1) celebrate(5, 0, false, 0), setTimeout(clearFx, 900);
     $('undo2').classList.toggle('hide', !last);
+    var dc = $('dailyclear'), dd2 = dState();
+    if (dailyNow){ $('dailyclearmsg').textContent = '📅 デイリークエスト クリア! ' + rwText(dailyNow.rw) + '・れんぞく' + dailyNow.streak + '日'; dc.classList.remove('hide'); }
+    else if (!dd2.done){ $('dailyclearmsg').textContent = '📅 デイリークエスト: 今日 ' + dd2.n + ' / ' + DAILY_NEED + '問(あと' + (DAILY_NEED - dd2.n) + '問でクリア)'; dc.classList.remove('hide'); }
+    else dc.classList.add('hide');
     var qc = $('questclear');
     if (questNow){ $('questclearmsg').textContent = '🚨 ' + questNow.title + ' クリア!' + SCIMAP[questNow.sci].i + ' ' + SCIMAP[questNow.sci].n + 'が仲間にできるようになったよ。'; qc.classList.remove('hide'); } else qc.classList.add('hide');
     var jc = $('jobclear');
@@ -2013,7 +2088,7 @@ function openPortraitGallery(){
       var n = 0;
       Object.keys(o.S || {}).forEach(function(k){ var a = S[k], b = o.S[k]; if (!a || (b && (b.l > a.l || (b.l === a.l && b.d > a.d)))){ S[k] = b; n++; } });
       if (o.P){ if ((o.P.xp || 0) > (P.xp || 0)){ P.xp = o.P.xp; P.sci = o.P.sci || P.sci; P.sciStart = o.P.sciStart || P.sciStart; if (o.P.team) P.team = o.P.team; P.rlv = o.P.rlv || lvOf(P.xp).lv; } var rpm = Object.assign({}, o.P.rp || {}); Object.keys(P.rp || {}).forEach(function(k){ rpm[k] = Math.max(rpm[k] || 0, P.rp[k]); }); P.rp = rpm; P.scis = Object.assign({}, o.P.scis || {}, P.scis || {}); var pr = Object.assign({}, o.P.prog || {}); Object.keys(P.prog || {}).forEach(function(k){ pr[k] = Math.max(pr[k] || 0, P.prog[k]); }); P.prog = pr; P.streak = Math.max(P.streak || 0, o.P.streak || 0);
-        var qm = Object.assign({}, o.P.quests || {}); Object.keys(P.quests || {}).forEach(function(k){ var a = qm[k] || {n:0, done:false}, b = P.quests[k]; qm[k] = {n: Math.max(a.n || 0, b.n || 0), done: !!(a.done || b.done), at: b.at || a.at}; }); P.quests = qm; }
+        var qm = Object.assign({}, o.P.quests || {}); Object.keys(P.quests || {}).forEach(function(k){ var a = qm[k] || {n:0, done:false}, b = P.quests[k]; qm[k] = {n: Math.max(a.n || 0, b.n || 0), done: !!(a.done || b.done), at: b.at || a.at}; }); P.quests = qm; if (o.P.daily){ var da = o.P.daily, db = P.daily; if (!db || da.day > db.day || (da.day === db.day && (da.n || 0) > (db.n || 0))) P.daily = Object.assign({}, da, {total: Math.max(da.total || 0, db ? db.total || 0 : 0)}); else db.total = Math.max(db.total || 0, da.total || 0); } }
       fixS(); saveS(); saveP(); initSci(); buildHome();
       $('bkmsg').textContent = '読み込みました(' + n + '問分を更新)。';
     } catch(e){ $('bkmsg').textContent = 'コードが読めません。「コードを出す」で出た文字を、そのまま全部貼りつけてください。'; }
@@ -2053,7 +2128,7 @@ if(new URLSearchParams(location.search).get('portraits')==='all')openPortraitGal
       if ($('home') && !$('home').classList.contains('hide')) buildHome();
     }).catch(function(){});
   } catch(e){}
-  window.__ichimon = { S: function(){ return S; }, P: function(){ return P; }, WAIT: WAIT, DATA: DATA, CFG: CFG, SCI: SCI, lvOf: lvOf, changeSci: changeSci };
+  window.__ichimon = { dState: dState, S: function(){ return S; }, P: function(){ return P; }, WAIT: WAIT, DATA: DATA, CFG: CFG, SCI: SCI, lvOf: lvOf, changeSci: changeSci };
 })();
 </script>
 </body>
