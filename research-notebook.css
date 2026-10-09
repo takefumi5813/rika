@@ -1,0 +1,94 @@
+/* A paper-and-botanical frame for the existing scientist illustrations. */
+:root {
+  color-scheme: light;
+  --bg:#eeeade; --card:#fffdf5; --ink:#253d34; --sub:#647365;
+  --line:#d2d6bf; --soft:#e9eddf; --ctx:#f0f2e6;
+  --primary:#285c48; --primary-ink:#fffdf2;
+  --bio:#387351; --phy:#3e6783; --chem:#a35d32; --geo:#80603d;
+  --great:#8a691f; --env:#367a76; --tag-ink:#fff;
+  --ok:#32704c; --ng:#ad4940; --ng-ink:#fff;
+  --paper-shadow:0 12px 36px #334c3010,0 2px 5px #334c3008;
+}
+/* Explicit palette overrides keep the notebook legible under system dark mode. */
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#192b24; --card:#243a30; --ink:#f0edda;
+  --sub:#bac8b3; --line:#52674e; --soft:#344b3a; --ctx:#2e4335;
+  --primary:#bbd2a4; --primary-ink:#1b3327; --bio:#467f58;
+  --phy:#496f91; --chem:#a96a40; --geo:#846847; --great:#8a691f;
+  --env:#3f7e7c; --tag-ink:#fff; --ok:#83bc8e; --ng:#c06459; --ng-ink:#fff;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#192b24; --card:#243a30; --ink:#f0edda;
+  --sub:#bac8b3; --line:#52674e; --soft:#344b3a; --ctx:#2e4335;
+  --primary:#bbd2a4; --primary-ink:#1b3327; --bio:#467f58;
+  --phy:#496f91; --chem:#a96a40; --geo:#846847; --great:#8a691f;
+  --env:#3f7e7c; --tag-ink:#fff; --ok:#83bc8e; --ng:#c06459; --ng-ink:#fff;
+}
+body{
+  background-image:radial-gradient(ellipse at 12% 0%,#91ab8624,transparent 55%),radial-gradient(#8a937817 .7px,transparent .7px);
+  background-size:auto,6px 6px;
+}
+.wrap{max-width:640px;padding:24px 20px 40px}
+.hud{border-bottom:1px solid var(--line);padding-bottom:13px;margin-bottom:18px;gap:8px}
+.hud .lv{border-width:1px;border-radius:7px;font-size:13px;padding:5px 10px}
+.hud .pt{font-size:13px;color:var(--sub)}
+.mute{border-width:1px;border-radius:10px;flex-shrink:0}
+.notebook-hero{position:relative;text-align:center;margin:0 0 22px;padding:14px 12px 20px;border-bottom:1px solid var(--line)}
+.notebook-hero::before{content:'✦';display:block;color:#987a3f;font-size:18px;margin-bottom:4px}
+.notebook-kicker{color:var(--sub);font-size:11px;font-weight:700;letter-spacing:.22em;margin:0 0 6px}
+.notebook-hero h1{font-family:'Yuji Syuku',serif;font-weight:400;font-size:clamp(30px,7vw,42px);letter-spacing:.07em;line-height:1.4;margin:0 0 8px}
+.notebook-hero .lead{font-size:13px;max-width:370px;margin:0 auto;line-height:1.8}
+.hero-scientists{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin:18px auto 14px;max-width:330px}
+.hero-scientist{width:30%;margin:0}
+.hero-scientist:nth-child(2){transform:translateY(-6px)}
+.hero-scientist .sci-portrait{border:1px solid var(--line);border-radius:46% 46% 10px 10px;box-shadow:0 5px 12px #213a2112}
+.hero-scientist figcaption{font-size:10px;color:var(--sub);margin-top:5px;white-space:nowrap}
+.scibar{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 3px 10px #334c3008}
+.scibar b{font-size:15px}.scibar .jgo{font-size:12px}.scibar .jicon .sci-portrait{width:36px}
+.panel{position:relative;border:1px solid var(--line);border-radius:15px;padding:24px;background:var(--card);box-shadow:var(--paper-shadow)}
+.panel::before{content:'';position:absolute;inset:6px;border:1px solid var(--line);border-radius:10px;pointer-events:none;opacity:.5}
+.panel h2{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:12px;letter-spacing:.1em;margin-bottom:12px}
+.panel h2::before{content:'';width:17px;height:1px;background:#987a3f}
+.chips{gap:8px;margin-bottom:22px}
+.chip{border-width:1px;border-radius:9px;padding:10px 14px;font-size:14px;background:var(--card);transition:background .15s,border-color .15s,box-shadow .15s}
+.chip[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--card);border-color:var(--primary)}
+.btn{border:1px solid transparent;border-radius:10px;font-size:16px;padding:14px 16px;box-shadow:0 3px 0 #172a2422;transition:filter .15s,transform .15s}
+.btn.ghost{border-color:var(--line);background:var(--card);box-shadow:0 2px 0 #172a2410;font-size:14px}
+.btn.ok{background:var(--primary);color:var(--primary-ink)}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:none}
+@media(hover:hover){.btn:hover:not(:disabled),.chip:hover:not(:disabled),.job:hover:not(.locked){filter:brightness(.96);border-color:var(--primary)}}
+button:focus-visible,.link:focus-visible{outline:3px solid #ad8739;outline-offset:3px}
+.toolrow{gap:9px;margin:18px 0}.toolrow .btn{min-width:140px;min-height:54px;line-height:1.5}
+.toolrow .btn{display:flex;justify-content:center;align-items:center;gap:8px;padding:11px 10px;font-size:13px}
+.menu-art{display:inline-block;width:32px;height:32px;flex-shrink:0;vertical-align:middle}
+.icon-heading{display:flex;align-items:center;gap:8px}
+.enemy .monster-art{display:grid;place-items:center;flex:0 0 96px;width:96px;height:96px;filter:drop-shadow(0 2px 1px #253d3418)}
+.monster-crop{display:block;background-image:url('assets/monsters.png');background-repeat:no-repeat}
+.enemy .ename{max-width:110px;overflow-wrap:anywhere;line-height:1.5}
+.enemy .ehpn{white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:380px){.enemy{gap:6px;padding:8px}.enemy .monster-art{flex-basis:80px;width:80px;height:80px}.enemy .ename{max-width:74px;font-size:11px}.menu-art{width:30px;height:30px}.toolrow .btn{font-size:12px}}
+.foot{font-size:11px;margin-top:24px}.foot .link{font-size:11px}
+.info{font-size:12px}.strong{margin:0 0 14px}.nextclass{line-height:1.8}
+.quest,.bday,.newopen{border-width:1px;border-radius:9px}
+.meta{min-height:44px;border-bottom:1px solid var(--line);padding-bottom:10px;font-size:13px}
+.bar{height:6px;margin:18px 0 22px}.bar i{background:linear-gradient(90deg,var(--primary),#a18a4e)}
+.tag{font-size:11px;border-radius:5px;padding:3px 9px}.unit{font-size:12px}
+.q{font-size:clamp(20px,4.8vw,24px);line-height:1.85;margin:22px 0 26px}
+.ctx{border-left:3px solid #a18a4e;border-radius:0 7px 7px 0;font-size:13px}
+.ans{border-top:1px dashed #a18a4e;padding-top:20px;margin-top:12px}.ans .a{font-size:24px;line-height:1.7}.ans .n{line-height:1.9}
+.enemy{background:var(--card);border:1px solid var(--line);padding:9px 12px;border-radius:9px;font-size:12px;margin:14px 0 10px}
+.enemy .ehp i{background:#ad6550}.enemy .ehp{height:7px;min-width:24px}
+.score{font-family:'Yuji Syuku',serif;color:var(--primary);margin:16px 0}.msg{font-size:16px}.jobclear{border:1px solid #a18a4e;background:var(--ctx)}
+#scis,#tree,#portrait-gallery{background-color:var(--bg);background-image:radial-gradient(#8a937817 .7px,transparent .7px);background-size:6px 6px}
+body:has(#scis:not(.hide),#tree:not(.hide),#portrait-gallery){overflow:hidden}
+.tier h3{letter-spacing:.08em;border-bottom:1px solid var(--line);padding-bottom:8px;margin:24px 0 12px}
+.jgrid{gap:12px}.job{border-width:1px;border-radius:12px;padding:12px;box-shadow:0 4px 12px #334c300a}
+.job .sci-portrait{border-radius:8px;border:1px solid var(--line);margin-bottom:10px}.job b{font-size:15px}.job small{font-size:12px;line-height:1.65}
+.job.current{box-shadow:0 0 0 2px var(--primary)}.job.avail{border-color:#9a7a35}.job.locked{opacity:.6}
+.tree-sc{border-width:1px;background-color:var(--card);background-image:radial-gradient(var(--line) .7px,transparent .7px);background-size:16px 16px}
+.tn{border-width:1px;border-radius:8px}.tn.avail{border-color:#9a7a35}
+.card{border:1px solid #9a7a35;border-radius:15px;box-shadow:0 0 0 5px var(--card),0 20px 70px #0004;padding:26px}
+.card h3{font-family:'Yuji Syuku',serif;font-weight:400;font-size:28px}.card .deed{font-size:14px;border-left:3px solid #9a7a35;border-radius:0 7px 7px 0}.card li{line-height:1.8}
+.portrait-toolbar{border-bottom:1px solid var(--line);padding-bottom:12px}
+@media(max-width:380px){.wrap{padding:16px 12px 28px}.panel{padding:19px 15px}.chip{padding:9px 11px}.scibar{gap:7px;padding:10px}.scibar .jgo{max-width:60px}.hud{flex-wrap:wrap}.rank{font-size:16px}.hero-scientists{gap:9px}.jgrid{gap:8px}.job{padding:9px}.row{gap:8px}.row .btn{padding:12px 8px;font-size:15px}}
+@media(prefers-reduced-motion:reduce){.btn,.chip{transition:none}.btn:active:not(:disabled){transform:none}}

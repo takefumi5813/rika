@@ -250,15 +250,21 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
 #portrait-gallery{position:fixed;inset:0;overflow:auto;background:var(--bg);z-index:45;padding-top:env(safe-area-inset-top,0px)}
 #portrait-gallery h2{font-size:21px;margin:0}.portrait-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
 #portrait-gallery .job small{min-height:2.8em}#portrait-gallery .jgrid{padding-bottom:24px}
-</style></head>
+</style>
+<link rel="stylesheet" href="research-notebook.css">
+</head>
 <body>
 <div class="wrap">
 
   <section id="home">
     <div class="hud"><span class="lv" id="lvH"></span><span class="pt" id="ptH"></span><button class="mute" id="mute" type="button" aria-label="音のオンオフ">🔊</button></div>
     <button class="scibar" id="scibtn" type="button"><span class="jicon" id="jicon"></span><span class="jtxt"><b id="jname"></b><small id="jprog"></small></span><span class="jgo">仲間をみる ›</span></button>
-    <h1>理科 一問一答</h1>
-    <p class="lead">問題を読んで、頭の中で答えてから「答えを見る」を押そう。</p>
+    <header class="notebook-hero">
+      <p class="notebook-kicker">科学者たちと、発見の一問。</p>
+      <h1>理科 一問一答</h1>
+      <div class="hero-scientists" id="hero-scientists" aria-label="科学者たちのイラスト"></div>
+      <p class="lead">問題を読んで、頭の中で答えてから<br>「答えを見る」を押そう。</p>
+    </header>
     <div class="panel">
       <h2>どこから出す?</h2>
       <div class="quest hide" id="quest"></div>
@@ -273,7 +279,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
       <div class="nextclass" id="nextclass"></div>
       <div class="gnoinfo hide" id="gnoinfo"></div>
     </div>
-    <div class="toolrow"><button class="btn ghost" id="whobtn" type="button">🕵️ 科学者だれでしょう?</button><button class="btn ghost" id="qbtn" type="button">📜 名言ずかん</button><button class="btn ghost" id="treebtn" type="button">🌳 研究ツリー</button></div>
+    <div class="toolrow"><button class="btn ghost" id="whobtn" type="button"><img class="menu-art" src="assets/scientist.svg" alt="" aria-hidden="true"><span>科学者だれでしょう?</span></button><button class="btn ghost" id="qbtn" type="button"><img class="menu-art" src="assets/quotes.svg" alt="" aria-hidden="true"><span>名言ずかん</span></button><button class="btn ghost" id="treebtn" type="button"><img class="menu-art" src="assets/research-tree.svg" alt="" aria-hidden="true"><span>研究ツリー</span></button></div>
     <div class="foot">
       <div id="ver"></div>
       <button class="link" id="resetall">学習の記録をリセット</button>
@@ -347,7 +353,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
 </section>
 <section id="tree" class="hide">
   <div class="wrap">
-    <div class="meta"><b>🌳 研究ツリー</b><button class="link" id="treeclose">とじる</button></div>
+    <div class="meta"><b class="icon-heading"><img class="menu-art" src="assets/research-tree.svg" alt="">研究ツリー</b><button class="link" id="treeclose">とじる</button></div>
     <p class="lead" id="treelead"></p>
     <div class="tsum" id="treesum"></div>
     <div class="tree-sc" id="treesc"><div class="tree-in" id="treein"></div></div>
@@ -1175,11 +1181,26 @@ function openPortraitGallery(){
 
   // ===== 敵(1回のセッションに1体) =====
   var MONSTERS = [['👾','スライムもどき'],['🐗','あばれイノシシ'],['🦇','やみコウモリ'],['🐍','どくヘビ'],['👻','さまようぼうれい'],['🧟','ゾンビ'],['🐙','大ダコ'],['🦂','さばくのサソリ'],['🐉','ドラゴン'],['🦖','ティラノ'],['🧌','トロル'],['🦈','ジョーズ'],['👹','おに'],['🤖','からくり兵'],['🐲','りゅうおう'],['🌋','マグマのかいぶつ'],['🧊','氷のゴーレム'],['☄️','いん石ガニ']];
+  // Pixel bounds in the illustrated atlas; keep adjacent creatures out of each icon.
+  var MONSTER_CROPS = [[44,108,213,174],[292,32,264,262],[558,58,353,216],[919,42,250,240],[1204,52,265,243],[1503,8,234,302],[14,335,294,235],[328,308,255,258],[577,306,313,263],[900,304,301,266],[1208,303,262,270],[1479,334,280,213],[28,574,264,303],[326,579,231,298],[569,575,309,302],[888,573,298,303],[1202,581,266,289],[1483,603,283,270]];
   var E = null;
   function newEnemy(n){ var m = pick(MONSTERS); E = {i:m[0], n:m[1], hp: n * 14, max: n * 14, dead:false}; drawEnemy(); }
   function drawEnemy(){
     if (!E) return;
-    $('eicon').textContent = E.i; $('ename').textContent = E.n;
+    var icon = $('eicon'); icon.textContent = '';
+    var monsterIndex = MONSTERS.findIndex(function(m){ return m[1] === E.n; });
+    icon.classList.add('monster-art');
+    var bounds = MONSTER_CROPS[monsterIndex];
+    if (bounds) {
+      var crop = document.createElement('span'); crop.className = 'monster-crop';
+      crop.style.width = (bounds[2] / Math.max(bounds[2],bounds[3]) * 100) + '%';
+      crop.style.aspectRatio = bounds[2] + '/' + bounds[3];
+      crop.style.backgroundSize = (1774 / bounds[2] * 100) + '% ' + (887 / bounds[3] * 100) + '%';
+      crop.style.backgroundPosition = (bounds[0] / (1774 - bounds[2]) * 100) + '% ' + (bounds[1] / (887 - bounds[3]) * 100) + '%';
+      icon.appendChild(crop);
+    }
+    icon.setAttribute('aria-hidden', 'true');
+    $('ename').textContent = E.n;
     $('ehp').style.width = Math.max(0, E.hp / E.max * 100) + '%'; $('ehpn').textContent = Math.max(0, E.hp) + '/' + E.max;
     $('enemy').classList.toggle('dead', E.dead);
   }
@@ -1856,6 +1877,14 @@ function openPortraitGallery(){
     };
   };
 
+  // Reuse the original portraits as an illustration, without altering team state.
+  ['newton', 'gal', 'mendel'].forEach(function(id){
+    var j = SCIMAP[id]; if (!j) return;
+    var figure = document.createElement('figure'); figure.className = 'hero-scientist';
+    var face = document.createElement('div'); paintSciPortrait(face,j); figure.appendChild(face);
+    var caption = document.createElement('figcaption'); caption.textContent = j.n; figure.appendChild(caption);
+    $('hero-scientists').appendChild(figure);
+  });
   initSci();
   buildHome();
 
