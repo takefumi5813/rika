@@ -1730,12 +1730,11 @@ function openPortraitGallery(){
   }
   function showJudge(ok, msg){
     judged = ok; var j = $('judge');
-    j.className = 'judge ' + (ok ? 'good' : 'bad'); j.innerHTML = '';
+    j.className = 'judge ' + (ok ? 'good hide' : 'bad'); j.innerHTML = ''; // 正解のときは演出が出るので文字は出さない
     j.appendChild(document.createTextNode(ok ? '⭕ 正解！' : '❌ ざんねん'));
     if (msg){ var sm = document.createElement('small'); sm.textContent = msg; j.appendChild(sm); }
-    $('reveal').classList.remove('hide'); $('selfrow').classList.add('hide'); $('nextrow').classList.remove('hide');
-    tone(ok ? [784, 1047] : [330, 262], 0.08);
-    setTimeout(function(){ try { $('next').focus({preventScroll:true}); } catch(e){} }, 30);
+    $('reveal').classList.remove('hide'); $('selfrow').classList.add('hide');
+    answer(ok, true);
   }
   function submitNum(){
     var it = queue[pos]; if (!it || it.q.t !== 'num' || $('numin').disabled) return;
@@ -1763,7 +1762,7 @@ function openPortraitGallery(){
     if (!isAuto(queue[pos].q)){ $('show').classList.add('hide'); $('reveal').classList.remove('hide'); }
   }
 
-  function answer(ok){
+  function answer(ok, auto){
     if (busy) return;
     var it = queue[pos], q = it.q, gained = 0, rankUp = false, L2 = 0, waitMs = 1500;
     last = {pos:pos, first:first, right:right, nw:wrongs.length, combo:combo, gt:gainedTotal, xp:P.xp, sid:q.id, s:S[q.id] ? {l:S[q.id].l, d:S[q.id].d} : null,
@@ -1803,6 +1802,7 @@ function openPortraitGallery(){
       if (newly.length){ sciClearedNow = (sciClearedNow || []).concat(newly); var nm = newly.map(function(j){ return j.n; }).join('・'); setTimeout(function(){ var m = document.createElement('div'); m.className = 'act'; m.style.top = '70%'; m.style.background = '#f2b01e'; m.style.color = '#2a1700'; m.textContent = nm + 'との研究が完成!'; fx.appendChild(m); tone([784, 988, 1175, 1568], 0.1); }, 300); }
     } else {
       combo = 0; encourage();
+      if (auto) waitMs = 3200; // 自動判定でまちがえたときは正しい答えを読む時間をとる（タップで先へ進める）
       var o = document.createElement('div'); o.className = 'ouch'; o.textContent = E ? E.n + 'のこうげき!' : ''; fx.appendChild(o);
     }
     pos++;
