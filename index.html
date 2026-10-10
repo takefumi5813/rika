@@ -69,7 +69,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
 .q{font-size:21px;font-weight:900;line-height:1.6;margin:14px 0 18px;min-height:4.8em;word-break:break-word;white-space:pre-line}
 .q .lab{display:block;font-size:14px;color:var(--sub);font-weight:700;margin-bottom:4px}
 .inp{margin:4px 0 0}.numrow{display:flex;align-items:center;gap:8px;margin:0 0 10px}.numin{flex:1;min-width:0;font:inherit;font-size:24px;font-weight:900;padding:10px 14px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);text-align:right}.numin:focus{outline:3px solid var(--primary);outline-offset:1px}.numunit{font-size:20px;font-weight:900;min-width:1em}
-.chs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:4px 0 0}.chs.one{grid-template-columns:1fr}.chs .btn{background:var(--card);color:var(--ink);border:2px solid var(--line);font-size:18px;padding:12px 10px;word-break:break-word}.chs .btn.right{background:var(--ok);color:#fff;border-color:var(--ok)}.chs .btn.wrong{background:var(--ng);color:var(--ng-ink);border-color:var(--ng)}.chs .btn[disabled]{opacity:1;cursor:default}
+.chs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:4px 0 0}.chs.one{grid-template-columns:1fr}.chs .btn{background:var(--card);color:var(--ink);border:2px solid var(--line);font-size:18px;padding:12px 10px;word-break:break-word}.chs .btn.right{background:var(--ok);color:#fff;border-color:var(--ok)}.chs .btn.wrong{background:var(--ng);color:var(--ng-ink);border-color:var(--ng)}.chs .btn[disabled]{opacity:1;cursor:default}.chs .btn.sel{background:var(--soft);border-color:var(--primary);box-shadow:inset 0 0 0 2px var(--primary)}.chs .btn.sel::before{content:'✓ '}.chs .btn.multigo{background:var(--primary);color:var(--primary-ink);border-color:var(--primary);margin-top:4px}.chs .btn.right::before{content:'✓ '}
 .judge{font-size:22px;font-weight:900;text-align:center;margin:12px 0 4px}.judge.good{color:var(--ok)}.judge.bad{color:#d93a3a}.judge small{display:block;font-size:14px;color:var(--sub);font-weight:700}
 .ans{border-top:2px dashed var(--line);padding-top:14px;margin-top:4px}
 .ans .lab{font-size:13px;color:var(--sub);font-weight:700}
@@ -1711,16 +1711,22 @@ function openPortraitGallery(){
     $('reveal').classList.add('hide');
     $('judge').classList.add('hide'); $('selfrow').classList.toggle('hide', auto); $('nextrow').classList.add('hide');
     $('inp').classList.toggle('hide', q.t !== 'num');
-    var ch = $('chs'); ch.innerHTML = ''; ch.classList.toggle('hide', q.t !== 'ch');
+    var ch = $('chs'); ch.innerHTML = ''; ch.classList.toggle('hide', q.t !== 'ch' && q.t !== 'multi');
     if (q.t === 'num'){ $('numin').value = ''; $('numin').disabled = false; $('numgo').disabled = false; $('numunit').textContent = q.unit || ''; setTimeout(function(){ try { $('numin').focus({preventScroll:true}); } catch(e){} }, 50); }
     if (q.t === 'ch'){
       var long = q.opts.some(function(o){ return o.length > 8; });
       ch.classList.toggle('one', long || q.opts.length === 3 || q.opts.length === 5);
       q.opts.forEach(function(o){ var bt = document.createElement('button'); bt.type = 'button'; bt.className = 'btn'; bt.textContent = o; bt.onclick = function(){ pickChoice(bt, o); }; ch.appendChild(bt); });
     }
+    if (q.t === 'multi'){
+      ch.classList.add('one');
+      q.opts.forEach(function(o){ var bt = document.createElement('button'); bt.type = 'button'; bt.className = 'btn opt'; bt.textContent = o; bt.setAttribute('aria-pressed', 'false');
+        bt.onclick = function(){ if (bt.disabled) return; var on = bt.getAttribute('aria-pressed') !== 'true'; bt.setAttribute('aria-pressed', on ? 'true' : 'false'); bt.classList.toggle('sel', on); }; ch.appendChild(bt); });
+      var go = document.createElement('button'); go.type = 'button'; go.className = 'btn multigo'; go.textContent = 'これで答える'; go.onclick = submitMulti; ch.appendChild(go);
+    }
     $('undo').classList.toggle('hide', !last);
   }
-  function isAuto(q){ return (q.t === 'num' && q.a != null) || (q.t === 'ch' && q.opts && q.opts.length > 1); }
+  function isAuto(q){ return (q.t === 'num' && q.a != null) || ((q.t === 'ch' || q.t === 'multi') && q.opts && q.opts.length > 1); }
   var judged = null;
   function toHalf(x){ return String(x).replace(/[０-９．－，／]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).replace(/[ー−–―]/g, '-').replace(/[\s,，]/g, ''); }
   function numVal(x){
@@ -1750,6 +1756,18 @@ function openPortraitGallery(){
     Array.prototype.forEach.call($('chs').children, function(b){ b.disabled = true; if (b.textContent === it.q.a) b.classList.add('right'); });
     if (!ok) bt.classList.add('wrong');
     showJudge(ok, ok ? '' : 'あなたの答え: ' + o);
+  }
+  function submitMulti(){
+    var it = queue[pos]; if (!it || it.q.t !== 'multi') return;
+    var bs = Array.prototype.slice.call($('chs').querySelectorAll('.opt'));
+    var picked = bs.filter(function(b){ return b.classList.contains('sel'); }).map(function(b){ return b.textContent; });
+    if (!picked.length || bs[0].disabled) return;
+    var ans = it.q.ans || [];
+    var ok = picked.length === ans.length && picked.every(function(o){ return ans.indexOf(o) >= 0; });
+    bs.forEach(function(b){ b.disabled = true; var isA = ans.indexOf(b.textContent) >= 0, isP = b.classList.contains('sel');
+      b.classList.remove('sel'); if (isA) b.classList.add('right'); else if (isP) b.classList.add('wrong'); });
+    $('chs').querySelector('.multigo').classList.add('hide');
+    showJudge(ok, ok ? '' : 'あなたの答え: ' + picked.join('・'));
   }
   function undo(){
     if (!last || busy) return;
