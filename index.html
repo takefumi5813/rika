@@ -131,7 +131,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
 .job b{display:block;font-size:15px;font-weight:900;margin-top:4px}
 .job small{display:block;font-size:11px;color:var(--sub);line-height:1.4;margin-top:2px}
 .job.cleared{border-color:#1b8a5a}
-.job.cleared b::after{content:' ✓';color:#1b8a5a}
+.job.cleared b{color:#1b8a5a}
 .job.current{border-color:var(--primary);box-shadow:0 0 0 3px var(--soft)}
 .job.avail{border-color:#f2b01e;border-style:dashed}
 .job.locked{opacity:.45;border-style:dashed;cursor:default}
@@ -453,11 +453,11 @@ body.cmp-open{overflow:hidden}
     </button>
     <div class="panel">
       <div class="quest daily" id="daily"></div>
-      <h2>どこから出す?</h2>
+      <h2>何を研究する？</h2>
       <div class="quest hide" id="quest"></div>
       <div class="bday hide" id="bday"></div>
       <div class="newopen hide" id="newopen"></div>
-      <div class="chips" id="modes"></div>
+      <div class="chips" id="modes" style="flex-direction:column;align-items:stretch"></div>
       <h2>問題の数</h2>
       <div class="chips" id="counts"></div>
       <div class="strong" id="strong"></div>
@@ -1132,10 +1132,23 @@ function openPortraitGallery(){
   // ===== 仲間(科学者)の進み方 =====
   var TIERNAME = ['はじまり','古代〜ルネサンス','17〜18世紀の科学者','19世紀の科学者','日本の近代科学','20世紀の科学者','現代のノーベル賞','殿堂','🚨 緊急クエスト'];
   // ===== 研究チーム(3人まで) =====
-  // レベルが1上がるごとに、チーム全員の研究が1進む。見習い研究者は9、ほかの科学者は13で研究完成(全員でレベル500くらいが目安)。
-  var TEAM_MAX = 3, RK = 13, RK_ME = 9;
+  // レベルが1上がるごとに、チーム全員の研究が1進む。見習い研究者は9、ほかの科学者は24で研究完成(3人を順次入れかえて通常の全研究がレベル898、限定科学者込みで913が目安。デイリー報酬で早まる)。
+  var TEAM_MAX = 3, RK = 24, RK_ME = 9;
   function rkOf(id){ return id === 'me' ? RK_ME : RK; }
-  function teamIds(){ var t = (P.team || []).filter(function(id){ return SCIMAP[id]; }); return t.length ? t : ['me']; }
+  function teamIds(){
+    if (mode === 'all') return (P.endTeam || []).filter(function(id){ return SCIMAP[id] && id !== 'me' && sciCleared(id); }).slice(0, TEAM_MAX);
+    var t = (P.team || []).filter(function(id){ return SCIMAP[id]; }); return t.length ? t : ['me'];
+  }
+  function insightCount(id){ return Math.max(0, Math.min(1000, Math.floor(Number((P.insight || {})[id]) || 0))); }
+  function insightOf(id){ return 1 + Math.floor(insightCount(id) * 98 / 1000); }
+  function scientistName(j){ return j.n + (sciCleared(j.id) && j.id !== 'me' ? ' ☆ 探究度' + insightOf(j.id) : ''); }
+  // 全範囲の初回正解だけを、同行している研究済み科学者ごとに数える。
+  function recordInsight(ok, retry){
+    if (mode !== 'all' || !ok || retry) return;
+    P.insight = P.insight || {};
+    teamIds().forEach(function(id){ P.insight[id] = Math.min(1000, insightCount(id) + 1); });
+    saveP();
+  }
   function teamOf(){ return teamIds().map(function(id){ return SCIMAP[id]; }); }
   function inTeam(id){ return teamIds().indexOf(id) >= 0; }
   function sciOf(){ return SCIMAP[teamIds()[0]] || SCIMAP.me; }
@@ -1172,6 +1185,13 @@ function openPortraitGallery(){
   function sciLv(){ return savedLv(sciOf().id); }
   function initSci(){
     P.scis = P.scis || {}; P.rp = P.rp || {};
+    if ((P.researchCurveVersion || 0) < 3){
+      var previousRK = P.researchCurveVersion === 2 ? 16 : 13;
+      Object.keys(P.rp).forEach(function(id){
+        if (id !== 'me' && SCIMAP[id] && !sciCleared(id)) P.rp[id] = Math.min(RK - 1, Math.ceil(Math.max(0, P.rp[id] || 0) * RK / previousRK));
+      });
+      P.researchCurveVersion = 3;
+    }
     if (!P.team){
       // 1人制からの引っこし: これまでの研究の進み具合を、チーム制の研究ポイントにうつす
       var old = P.sci || 'me', lvNow = lvOf(P.xp).lv;
@@ -1200,9 +1220,9 @@ function openPortraitGallery(){
     return got;
   }
   function checkSciClear(){ return []; }
-  function setTeam(t){ P.team = t.slice(0, TEAM_MAX); if (!P.team.length) P.team = ['me']; P.sci = P.team[0]; saveP(); }
+  function setTeam(t){ if (mode === 'all'){ P.endTeam = t.filter(function(id){ return id !== 'me' && SCIMAP[id] && sciCleared(id); }).slice(0, TEAM_MAX); saveP(); return; } P.team = t.slice(0, TEAM_MAX); if (!P.team.length) P.team = ['me']; P.sci = P.team[0]; saveP(); }
   function joinTeam(id, outId){
-    var j = SCIMAP[id]; if (!j || sciState(j) === 'locked' || inTeam(id)) return;
+    var j = SCIMAP[id]; if (!j || (mode === 'all' && (id === 'me' || !sciCleared(id))) || sciState(j) === 'locked' || inTeam(id)) return;
     var t = teamIds().filter(function(x){ return x !== outId; });
     if (t.length === 1 && t[0] === 'me' && sciCleared('me')) t = [];   // 研究が終わった見習いは自動で外れる
     t.push(id); setTeam(t);
@@ -1246,7 +1266,7 @@ function openPortraitGallery(){
     tm.forEach(function(j){
       var member = document.createElement('span'); member.className = 'team-member';
       var face = document.createElement('span'); face.textContent = j.i; paintSciPortrait(face,j);
-      var name = document.createElement('span'); name.className = 'team-name'; name.textContent = j.n;
+      var name = document.createElement('span'); name.className = 'team-name'; name.textContent = scientistName(j);
       member.appendChild(face); member.appendChild(name); portraits.appendChild(member);
     });
   }
@@ -1418,10 +1438,10 @@ function openPortraitGallery(){
   }
 
   // ===== モード =====
-  var mode = 'all', count = 10;
+  var mode = 'review', count = 10;
   function modeFilter(m){
     if (m === 'gnorev'){ var g = nextGnorev(); return g ? function(q){ return inRange(q, g); } : function(){ return false; }; }
-    return avail;
+    return function(q){ return avail(q) && (q.f !== '偉人' || sciCleared(q.sid)); };
   }
   // 次回復習テスト対策: いちばん新しく取り込まれた(開いた)回。次の回が取り込まれる/開くと自動で入れ替わる。
   // 予定表の review.units に回を書くと、自動判定をやめてその回に固定できる。
@@ -1452,7 +1472,15 @@ function openPortraitGallery(){
     return h < 24 ? h + '時間後' : Math.ceil(h/24) + '日後';
   }
 
+  function allUnlocked(){ return dueFor('review').length === 0 && dueFor('gnorev').length === 0; }
+  function selectMode(key){
+    if (key === 'all' && !allUnlocked()) return;
+    mode = key;
+    if (mode === 'all' && !teamIds().length){ P.endTeam = clearedList().slice(0, TEAM_MAX).map(function(j){ return j.id; }); saveP(); }
+    buildHome();
+  }
   function buildHome(){
+    if (mode === 'all' && !allUnlocked()) mode = dueFor('review').length ? 'review' : 'gnorev';
     hud();
     var g = nextGnorev(), box = $('modes'); box.innerHTML = '';
     function chip(key, title, sub, disabled){
@@ -1460,20 +1488,19 @@ function openPortraitGallery(){
       b.className = 'chip'; b.type = 'button'; b.disabled = !!disabled;
       b.setAttribute('aria-pressed', mode === key ? 'true' : 'false');
       b.appendChild(document.createTextNode(title));
-      b.onclick = function(){ mode = key; buildHome(); };
+      var sm = document.createElement('small'); sm.textContent = sub; b.appendChild(sm);
+      b.onclick = function(){ selectMode(key); };
       box.appendChild(b);
     }
-    chip('all', '全部', 'テキスト・関連問題・仲間の科学者');
+    var unlocked = allUnlocked(), reviewLeft = dueFor('review').length, gnoLeft = dueFor('gnorev').length;
+    chip('all', '🏅 ノーベル賞への挑戦', '(全範囲) 世界の謎を解く、壮大な研究', !unlocked);
+    chip('gnorev', '🔬 先端研究プロジェクト', '(グノレブ対策) ' + (g ? '次回グノレブ対策・残り' + gnoLeft + '問' : '次のテスト範囲は準備中'), !g);
     var ru = reviewUnits();
-    if (ru.length) chip('review', '次回復習テスト対策', ru.map(unitLabel).join('・') + '(' + poolFor('review').length + '問)', false);
-    else { chip('review', '次回復習テスト対策', 'まだ取り込まれた回がありません', true); if (mode === 'review') mode = 'all'; }
-    if (g){
-      var pp = g.test.split('-'), md = (+pp[1]) + '/' + (+pp[2]);
-      chip('gnorev', '次回グノレブ対策', g.name + '(' + md + ')・' + (g.all ? '範囲なし(テキストの内容)' : '第' + g.from + '〜' + g.to + '回') + '・' + poolFor('gnorev').length + '問', false);
-    } else {
-      chip('gnorev', '次回グノレブ対策', '次のテストの範囲はまだ入っていません', true);
-      if (mode === 'gnorev') mode = 'all';
-    }
+    chip('review', '🧪 基礎実験', '(復習テスト用) ' + (ru.length ? '次回復習テスト対策・残り' + reviewLeft + '問' : '復習範囲は準備中'), !ru.length);
+    var researchNote = document.createElement('p'); researchNote.className = 'info'; researchNote.style.textAlign = 'left';
+    researchNote.textContent = (unlocked ? '🏅 全範囲を解放中。' : '🔒 全範囲は、復習テストとグノレブの残り問題が両方0問になると解放。いまは復習' + reviewLeft + '問・グノレブ' + gnoLeft + '問が残っています。') +
+      ' 研究済みの科学者だけが参加できます。探究度は全範囲でのみ成長し、同行中の各科学者が1000問正解で99に到達します。誤答・同じ出題のやり直しは数えません。';
+    box.appendChild(researchNote);
     var cb = $('counts'); cb.innerHTML = '';
     [[5,'5問'],[10,'10問'],[20,'20問'],[0,'ぜんぶ']].forEach(function(p){
       var b = document.createElement('button');
@@ -1483,10 +1510,11 @@ function openPortraitGallery(){
       cb.appendChild(b);
     });
     var pool = poolFor(mode), due = pool.filter(isDue), nx = nextDueText(mode);
-    $('start').disabled = due.length === 0;
+    $('start').disabled = due.length === 0 || (mode === 'all' && (!unlocked || !teamIds().length));
     $('dueinfo').textContent = due.length
       ? 'いま出せる問題: ' + due.length + '問(全部で' + pool.length + '問)'
       : (pool.length ? 'いまはぜんぶおわり!次に出るのは' + nx + 'です。' : 'この範囲の問題はまだありません。');
+    if (mode === 'all' && !teamIds().length) $('dueinfo').textContent = '研究済みの科学者を仲間画面からチームに入れてください。';
     $('ver').textContent = '問題データ ' + CFG.version + '版・' + DATA.filter(avail).length + '問' + (CFG.schedVer ? '・予定表 ' + CFG.schedVer : '');
     // 授業に合わせて新しく開いた回のお知らせ
     var nb = $('newopen'), nu = newlyOpened();
@@ -1559,7 +1587,7 @@ function openPortraitGallery(){
           b2.textContent = '「次回グノレブ対策」にして始める';
           b2.onclick = function(){ mode = 'gnorev'; count = 20; buildHome(); window.scrollTo(0, 0); };
         } else {
-          b2.textContent = '「全部」で始める'; b2.onclick = function(){ mode = 'all'; buildHome(); };
+          b2.textContent = '「ノーベル賞への挑戦」を見る'; b2.onclick = function(){ selectMode('all'); };
         }
         box.appendChild(b2);
       }
@@ -1649,6 +1677,7 @@ function openPortraitGallery(){
   function show(id){ ['opening','home','play','result'].forEach(function(s){ $(s).classList.toggle('hide', s !== id); }); window.scrollTo(0,0); }
 
   function begin(){
+    if (mode === 'all' && (!allUnlocked() || !teamIds().length)){ buildHome(); show('home'); return; }
     markOpenedSeen();
     var pool = shuffle(dueFor(mode));
     if (!pool.length){ buildHome(); show('home'); return; }
@@ -1828,7 +1857,7 @@ function openPortraitGallery(){
   function undo(){
     if (!last || busy) return;
     pos = last.pos; first = last.first; right = last.right; wrongs.length = last.nw; combo = last.combo; gainedTotal = last.gt;
-    P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); var dy0 = JSON.parse(last.dy); if (dy0) P.daily = dy0; else delete P.daily; saveP(); sciClearedNow = last.jc; questNow = last.qn; dailyNow = last.dn;
+    P.insight = JSON.parse(last.insight); P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); var dy0 = JSON.parse(last.dy); if (dy0) P.daily = dy0; else delete P.daily; saveP(); sciClearedNow = last.jc; questNow = last.qn; dailyNow = last.dn;
     if (E){ E.hp = last.ehp; E.dead = last.edead; drawEnemy(); }
     if (last.s) S[last.sid] = last.s; else delete S[last.sid];
     saveS(); last = null; clearFx();
@@ -1839,8 +1868,9 @@ function openPortraitGallery(){
   function answer(ok, auto){
     if (busy) return;
     var it = queue[pos], q = it.q, gained = 0, rankUp = false, L2 = 0, waitMs = 1500;
-    last = {pos:pos, first:first, right:right, nw:wrongs.length, combo:combo, gt:gainedTotal, xp:P.xp, sid:q.id, s:S[q.id] ? {l:S[q.id].l, d:S[q.id].d} : null,
+    last = {insight:JSON.stringify(P.insight || {}), pos:pos, first:first, right:right, nw:wrongs.length, combo:combo, gt:gainedTotal, xp:P.xp, sid:q.id, s:S[q.id] ? {l:S[q.id].l, d:S[q.id].d} : null,
             ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), rp:JSON.stringify(P.rp || {}), rlv:P.rlv, jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow, dy:JSON.stringify(P.daily || null), dn:dailyNow};
+    recordInsight(ok, it.retry);
     if (!it.retry){
       first++;
       var L = (S[q.id] && S[q.id].l) || 0;
@@ -1919,7 +1949,7 @@ function openPortraitGallery(){
     if (questNow){ $('questclearmsg').textContent = '🚨 ' + questNow.title + ' クリア!' + SCIMAP[questNow.sci].i + ' ' + SCIMAP[questNow.sci].n + 'が仲間にできるようになったよ。'; qc.classList.remove('hide'); } else qc.classList.add('hide');
     var jc = $('jobclear');
     var fin = teamOf().filter(function(j){ return sciCleared(j.id); });
-    if (fin.length){ $('jobclearmsg').textContent = fin.map(function(j){ return j.n; }).join('・') + 'との研究が完成した!研究チームを入れかえよう。'; jc.classList.remove('hide'); }
+    if (fin.length && mode !== 'all'){ $('jobclearmsg').textContent = fin.map(function(j){ return j.n; }).join('・') + 'との研究が完成した!研究チームを入れかえよう。'; jc.classList.remove('hide'); }
     else jc.classList.add('hide');
     show('result');
     if (sciClearedNow && sciClearedNow.length) CMP.play(sciClearedNow);
@@ -2431,7 +2461,7 @@ function openPortraitGallery(){
     checkSciClear();
     var box = $('scitiers'); box.innerHTML = '';
     var tm0 = teamOf(), n = Object.keys(P.scis || {}).length;
-    $('scislead').textContent = '気になる科学者を選んで、くわしく見る。';
+    $('scislead').textContent = (mode === 'all' ? '全範囲には研究済みの科学者だけ参加できます。' : '気になる科学者を選んで、くわしく見る。') + '探究度は全範囲でのみ上がります。1000問正解で99。';
     [8, 0, 1, 2, 3, 4, 5, 6, 7].forEach(function(t){   // 緊急クエストの科学者がいちばん上
       var js = SCI.filter(function(j){ return j.t === t; }); if (!js.length) return;
       if (t === 8 && !js.some(sciVis)) return;
@@ -2444,7 +2474,7 @@ function openPortraitGallery(){
         b.className = 'job ' + (st === 'locked' && vis ? 'next' : st);
         var ic = document.createElement('div'); ic.className = 'ji'; ic.textContent = vis ? j.i : '❓'; if(vis)paintSciPortrait(ic,j);
         b.setAttribute('aria-label', vis ? j.n : '未発見の科学者');
-        var nm = document.createElement('b'); nm.textContent = vis ? j.n : '???';
+        var nm = document.createElement('b'); nm.textContent = vis ? scientistName(j) : '???';
         b.appendChild(ic); b.appendChild(nm);
         if (!vis) b.disabled = true;
         if (vis) b.onclick = function(){ openCard(j); };
@@ -2459,12 +2489,17 @@ function openPortraitGallery(){
     var box = $('scicard'); box.innerHTML = '';
     var card = document.createElement('div'); card.className = 'card';
     var ci = document.createElement('div'); ci.className = 'ci'; ci.textContent = j.i; paintSciPortrait(ci,j); card.appendChild(ci);
-    var h3 = document.createElement('h3'); h3.textContent = (justJoined ? '研究チームに入った! ' : '') + j.n; card.appendChild(h3);
+    var h3 = document.createElement('h3'); h3.textContent = (justJoined ? '研究チームに入った! ' : '') + scientistName(j); card.appendChild(h3);
     var era = document.createElement('p'); era.className = 'era'; era.textContent = j.era; card.appendChild(era);
     var status = document.createElement('p'); status.className = 'research-status';
     if (st === 'locked') status.textContent = j.req.map(function(id){ return SCIMAP[id].n; }).join('・') + 'の研究が完成すると仲間にできる';
     else status.textContent = (st === 'current' ? '研究チーム · ' : '') + (sciCleared(j.id) ? '研究完成' : '研究レベル ' + savedLv(j.id) + ' / 10');
     card.appendChild(status);
+    if (sciCleared(j.id) && j.id !== 'me'){
+      var insight = document.createElement('p'); insight.className = 'note';
+      insight.textContent = '探究度 ' + insightOf(j.id) + ' / 99 · 全範囲での正解 ' + insightCount(j.id) + ' / 1000問。探究度は全範囲でのみ上がります。';
+      card.appendChild(insight);
+    }
     var deed = document.createElement('div'); deed.className = 'deed'; deed.textContent = '偉業: ' + j.d; card.appendChild(deed);
     if (j.id !== 'me'){
       var spp = document.createElement('p'); spp.className = 'note';
@@ -2512,7 +2547,7 @@ function openPortraitGallery(){
         out.onclick = function(){ leaveTeam(j.id); box.classList.add('hide'); openScis(); hud(); buildHome(); };
         row.appendChild(out);
       }
-    } else if (st === 'avail' || st === 'cleared'){
+    } else if ((st === 'avail' || st === 'cleared') && (mode !== 'all' || (j.id !== 'me' && sciCleared(j.id)))){
       var go = document.createElement('button'); go.className = 'btn'; go.type = 'button'; go.textContent = '研究チームに入れる';
       // 押しまちがい防止: 1回目は確認だけ
       go.onclick = function(){
@@ -2520,7 +2555,7 @@ function openPortraitGallery(){
         var tm = teamOf(), meOnly = tm.length === 1 && tm[0].id === 'me' && sciCleared('me');
         var ask = document.createElement('p'); ask.className = 'confirm';
         var lvNew = sciCleared(j.id) ? 0 : savedLv(j.id);
-        var note2 = lvNew ? j.n + 'は研究レベル' + lvNew + 'から。' : 'もう研究が完成しているので、技は全部使えます(研究は進みません)。';
+        var note2 = lvNew ? j.n + 'は研究レベル' + lvNew + 'から。' : '研究完成☆ 全範囲で同行すると探究度が育ちます。';
         var no = document.createElement('button'); no.className = 'btn ghost'; no.type = 'button'; no.textContent = 'やめる';
         no.onclick = function(){ openCard(j); };
         if (tm.length < TEAM_MAX || meOnly){
@@ -2542,9 +2577,9 @@ function openPortraitGallery(){
         card.insertBefore(ask, row);
       };
       row.appendChild(go);
-    } else if (st === 'locked'){
+    } else if (st === 'locked' || mode === 'all'){
       var ng = document.createElement('button'); ng.className = 'btn'; ng.type = 'button'; ng.disabled = true;
-      ng.textContent = j.quest ? '緊急クエストをクリアしてから' : j.req.map(function(r){ return SCIMAP[r].n; }).join('・') + 'の研究が完成してから';
+      ng.textContent = mode === 'all' ? '全範囲に参加できるのは研究済みの科学者だけ' : j.quest ? '緊急クエストをクリアしてから' : j.req.map(function(r){ return SCIMAP[r].n; }).join('・') + 'の研究が完成してから';
       row.appendChild(ng);
     }
     card.appendChild(row);
@@ -2615,9 +2650,9 @@ function openPortraitGallery(){
       if (j.quest && st === 'locked' && !vis) return;
       if (st === 'locked' && !vis) b.className = 'tn locked';
       b.style.left = p.x + 'px'; b.style.top = p.y + 'px';
-      var n = document.createElement('b'); n.textContent = vis ? j.i + ' ' + j.n : '❓ ???';
+      var n = document.createElement('b'); n.textContent = vis ? j.i + ' ' + scientistName(j) : '❓ ???';
       var sg = document.createElement('small');
-      sg.textContent = j.id === 'me' ? 'はじまり' : (vis ? (sciCleared(j.id) ? '✓ 全+' + GL_PCT + '% / ' : '') + spLabel(j).replace(/第\d+回 /g, '').slice(0, 14) + (sciCleared(j.id) ? ' +' + SP_PCT + '%' : '') : '');
+      sg.textContent = j.id === 'me' ? 'はじまり' : (vis ? (sciCleared(j.id) ? '☆ 全+' + GL_PCT + '% / ' : '') + spLabel(j).replace(/第\d+回 /g, '').slice(0, 14) + (sciCleared(j.id) ? ' +' + SP_PCT + '%' : '') : '');
       if(vis){var face=document.createElement('span');paintSciPortrait(face,j);b.appendChild(face);}b.appendChild(n); b.appendChild(sg);
       if (vis) b.onclick = function(){ openCard(j); };
       box.appendChild(b);
