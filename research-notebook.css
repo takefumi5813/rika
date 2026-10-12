@@ -36,7 +36,7 @@ body{
 .notebook-hero{position:relative;text-align:center;margin:0 0 22px;padding:14px 12px 20px;border-bottom:1px solid var(--line)}
 .notebook-hero::before{content:'✦';display:block;color:#987a3f;font-size:18px;margin-bottom:4px}
 .notebook-kicker{color:var(--sub);font-size:11px;font-weight:700;letter-spacing:.22em;margin:0 0 6px}
-.notebook-hero h1{font-family:'Yuji Syuku',serif;font-weight:400;font-size:clamp(30px,7vw,42px);letter-spacing:.07em;line-height:1.4;margin:0 0 8px}
+.notebook-hero h1{font-family:'Noto Serif JP',serif;font-weight:400;font-size:clamp(30px,7vw,42px);letter-spacing:.07em;line-height:1.4;margin:0 0 8px}
 .notebook-hero .lead{font-size:13px;max-width:370px;margin:0 auto;line-height:1.8}
 .hero-scientists{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin:18px auto 14px;max-width:330px}
 .hero-scientist{width:30%;margin:0}
@@ -78,7 +78,7 @@ button:focus-visible,.link:focus-visible{outline:3px solid #ad8739;outline-offse
 .ans{border-top:1px dashed #a18a4e;padding-top:20px;margin-top:12px}.ans .a{font-size:24px;line-height:1.7}.ans .n{line-height:1.9}
 .enemy{background:var(--card);border:1px solid var(--line);padding:9px 12px;border-radius:9px;font-size:12px;margin:14px 0 10px}
 .enemy .ehp i{background:#ad6550}.enemy .ehp{height:7px;min-width:24px}
-.score{font-family:'Yuji Syuku',serif;color:var(--primary);margin:16px 0}.msg{font-size:16px}.jobclear{border:1px solid #a18a4e;background:var(--ctx)}
+.score{font-family:'Noto Serif JP',serif;color:var(--primary);margin:16px 0}.msg{font-size:16px}.jobclear{border:1px solid #a18a4e;background:var(--ctx)}
 #scis,#tree,#portrait-gallery{background-color:var(--bg);background-image:radial-gradient(#8a937817 .7px,transparent .7px);background-size:6px 6px}
 body:has(#scis:not(.hide),#tree:not(.hide),#portrait-gallery){overflow:hidden}
 .tier h3{letter-spacing:.08em;border-bottom:1px solid var(--line);padding-bottom:8px;margin:24px 0 12px}
@@ -88,7 +88,7 @@ body:has(#scis:not(.hide),#tree:not(.hide),#portrait-gallery){overflow:hidden}
 .tree-sc{border-width:1px;background-color:var(--card);background-image:radial-gradient(var(--line) .7px,transparent .7px);background-size:16px 16px}
 .tn{border-width:1px;border-radius:8px}.tn.avail{border-color:#9a7a35}
 .card{border:1px solid #9a7a35;border-radius:15px;box-shadow:0 0 0 5px var(--card),0 20px 70px #0004;padding:26px}
-.card h3{font-family:'Yuji Syuku',serif;font-weight:400;font-size:28px}.card .deed{font-size:14px;border-left:3px solid #9a7a35;border-radius:0 7px 7px 0}.card li{line-height:1.8}
+.card h3{font-family:'Noto Serif JP',serif;font-weight:400;font-size:28px}.card .deed{font-size:14px;border-left:3px solid #9a7a35;border-radius:0 7px 7px 0}.card li{line-height:1.8}
 .portrait-toolbar{border-bottom:1px solid var(--line);padding-bottom:12px}
 @media(max-width:380px){.wrap{padding:16px 12px 28px}.panel{padding:19px 15px}.chip{padding:9px 11px}.scibar{gap:7px;padding:10px}.scibar .jgo{max-width:60px}.hud{flex-wrap:wrap}.rank{font-size:16px}.hero-scientists{gap:9px}.jgrid{gap:8px}.job{padding:9px}.row{gap:8px}.row .btn{padding:12px 8px;font-size:15px}}
 @media(prefers-reduced-motion:reduce){.btn,.chip{transition:none}.btn:active:not(:disabled){transform:none}}
@@ -101,7 +101,7 @@ body:has(#opening:not(.hide))>.wrap{max-width:1180px;padding:0 48px}
 #opening{min-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;align-items:center;color:#fff9eb}
 .opening-copy{max-width:530px;padding:64px 0}
 .opening-kicker{font-size:11px;letter-spacing:.3em;color:#e0d8bb;margin:0 0 24px}
-#opening h1{font-family:'Yuji Syuku',serif;font-size:clamp(38px,6vw,66px);font-weight:400;letter-spacing:.07em;line-height:1.5;margin:0;text-shadow:0 2px 16px #071d1d60}
+#opening h1{font-family:'Noto Serif JP',serif;font-size:clamp(38px,6vw,66px);font-weight:400;letter-spacing:.07em;line-height:1.5;margin:0;text-shadow:0 2px 16px #071d1d60}
 .opening-subtitle{font-size:14px;letter-spacing:.1em;margin:18px 0 44px;color:#fff6e3}
 #continue-research{display:flex;justify-content:space-between;align-items:center;gap:48px;width:300px;max-width:100%;min-height:62px;background:#f6f0dd;color:#183c38;border:1px solid #d1b979;font-weight:700;box-shadow:0 8px 30px #061a2040;border-radius:6px;padding:16px 24px}
 #home>.hud,#play>.meta{color:#fff4df;border-color:#ffffff30}
@@ -134,3 +134,35 @@ body:has(#opening:not(.hide))>.wrap{max-width:1180px;padding:0 48px}
 #scislead{font-size:12px;margin-top:16px}.research-status{font-size:13px;color:var(--primary);padding:10px 0;border-block:1px solid var(--line)}
 .card{border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 70px #0004}.card h3{font-size:26px}
 @media(max-width:600px){body:has(#opening:not(.hide))>.wrap{padding:0 28px}body:has(#opening:not(.hide)){background-image:linear-gradient(0deg,#092526e6,#09252666 65%,#09252620),url('assets/laboratory.jpg');background-position:62% center}#opening{align-items:flex-end}.opening-copy{padding:80px 0 64px;width:100%}.opening-kicker{margin-bottom:16px}#opening h1{font-size:40px}.opening-subtitle{font-size:12px;margin:12px 0 30px}#continue-research{width:100%}.wrap{padding:20px 16px 32px}.panel{padding:22px 18px}.notebook-hero h1{font-size:28px}.team-portraits{gap:14px}.scibar{padding:16px 18px}.toolrow .btn{flex-direction:column;font-size:11px;padding:12px 6px}.q{font-size:22px;line-height:1.8}.team-name{font-size:11px}#scis .jgrid{gap:22px 14px}}
+
+/* Curiosity Lab: botanical ink, aged paper and brass, shared by every screen. */
+:root{--bg:#e9e3d4;--card:#faf5e9;--ink:#303e35;--sub:#667163;--line:#cfc8b2;--soft:#e9e8d8;--ctx:#eee9da;--primary:#365b48;--primary-ink:#fff9eb;--ok:#41664e;--ng:#a25241;--ng-ink:#fff9eb;--bio:#527259;--phy:#536c75;--chem:#9b7049;--geo:#81704e;--great:#8c733e;--env:#557a71;--brass:#947742;--tag-ink:#fff9eb}
+body{font-family:'Noto Sans JP','Yu Gothic',Meiryo,sans-serif;font-weight:400;line-height:1.85;background-image:linear-gradient(#142d28b8,#142d28e8),url('assets/laboratory.jpg')}
+button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h2,h3,.notebook-hero h1,#opening h1,.card h3,.score{font-family:'Noto Serif JP','Yu Mincho',serif;font-weight:600}
+#opening h1{font-size:clamp(36px,5.8vw,64px);letter-spacing:.08em;line-height:1.65}
+.opening-kicker,.notebook-kicker{font-family:Georgia,serif;letter-spacing:.25em;color:#dbc9a3}.opening-subtitle{font-size:14px;letter-spacing:.08em;line-height:2}
+.opening-copy::before{content:'CABINET OF SCIENCE';display:block;font:10px Georgia,serif;letter-spacing:.25em;color:#d4bd88;border-top:1px solid #d4bd8860;width:max-content;padding-top:18px;margin-bottom:28px}
+#continue-research{border-color:#b49a64;background:#f4ecd7;color:#304b3d;font-family:'Noto Serif JP',serif;border-radius:5px}
+.notebook-hero h1{font-size:clamp(26px,5.5vw,36px);letter-spacing:.06em}.notebook-hero{padding-block:6px 10px}
+.panel,.scibar,.card{background:var(--card);border-color:var(--line);border-radius:10px;box-shadow:0 12px 36px #071b1920}.panel{background-image:linear-gradient(110deg,#ffffff28,transparent 70%)}
+.panel h2{font-size:14px;color:var(--ink);letter-spacing:.1em;font-weight:600}.team-heading{letter-spacing:.07em;font-size:12px}
+.team-portraits{max-width:460px;gap:22px}.team-member .sci-portrait{border:1px solid var(--line);border-radius:40% 40% 5px 5px;background:#eee7d7;box-shadow:0 4px 10px #303e3510}.team-name{font-size:12px;line-height:1.8}
+.hud .lv[class]{background:var(--card);color:var(--primary);border:1px solid #b9a472;border-radius:4px;font-weight:600;font-variant-numeric:tabular-nums}.hud .pt{font-size:11px;font-weight:400}.mute{display:grid;place-items:center;border-color:#b9a472;border-radius:5px;width:42px;height:42px;padding:8px}
+.lab-icon{display:inline-block;width:25px;height:25px;flex:none;vertical-align:middle;color:var(--brass)}.lab-icon-wrap{display:inline-flex;align-items:center;justify-content:center;flex:none}.toolrow .lab-icon{width:29px;height:29px}.mute .lab-icon{width:21px;height:21px;color:var(--primary)}
+#modes{gap:10px}#modes .chip{display:grid;grid-template-columns:36px 1fr;column-gap:10px;align-items:center;padding:16px 14px;min-height:82px;text-align:left;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:5px;font-size:15px}
+#modes .chip>.lab-icon-wrap{grid-row:1/3}#modes .chip .lab-icon{width:29px;height:29px}#modes .chip small{grid-column:2;font-size:11px;line-height:1.75;margin-top:3px;color:var(--sub);opacity:1;font-weight:400}
+#modes .chip[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}#modes .chip[aria-pressed="true"] small{color:#e1e7d7}#modes .chip[aria-pressed="true"] .lab-icon{color:#dcc18c}#modes .chip:disabled{opacity:.7;background:var(--soft);border-style:dashed}
+#modes .info{border-top:1px solid var(--line);padding-top:14px;margin-top:6px;font-size:11px;line-height:1.9;color:var(--sub)}#modes .info .lab-icon-wrap{float:left;margin:3px 8px 0 0}#modes .info .lab-icon{width:18px;height:18px}
+.btn{border-radius:5px;font-size:16px;letter-spacing:.04em}.btn.ghost{background:var(--card);border-color:var(--line);color:var(--ink)}.btn.ng{background:var(--ng);color:var(--ng-ink)}.btn:disabled{opacity:.6}.btn:focus-visible,.chip:focus-visible{outline:3px solid var(--brass);outline-offset:3px}
+.quest,.quest.daily,.quest.done,.quest.daily.done,.bday,.newopen,.gnoinfo{background:var(--ctx);color:var(--ink);border:1px solid var(--line);border-radius:6px;box-shadow:none}.quest.daily{padding:15px 16px;margin-bottom:26px}.quest .qt{display:flex;align-items:center;gap:9px;font-family:'Noto Serif JP',serif;font-size:15px;font-weight:600;margin-bottom:9px}.quest .qt .lab-icon{width:22px;height:22px}.quest small{font-weight:400;font-size:11px;line-height:1.85;opacity:1}.quest .qb{height:5px;background:var(--line);margin:12px 0 8px}.quest .qb i,.quest.daily .qb i{background:linear-gradient(90deg,var(--primary),var(--brass))}
+.dstamps{gap:7px;margin-top:12px}.dstamps span,.quest.daily .dstamps span{background:var(--card);color:var(--sub);border:1px solid var(--line);border-radius:50%;font-size:10px;height:28px;max-width:28px;line-height:26px}.dstamps span.on,.quest.daily.done .dstamps span.on{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.strong,.nextclass,.info{font-weight:400;line-height:1.9}.toolrow .btn{border-radius:5px;font-weight:500}.foot .link{min-height:44px}#play>.meta,.undo .link{color:#f5ead1}.q{font-weight:600;line-height:1.9}.tag{font-weight:500}.rank .on{color:var(--brass)}.judge.good{color:var(--ok)}.judge.bad{color:var(--ng)}.enemy{background:var(--card);color:var(--sub);border-color:var(--line)}.enemy .ehp i{background:var(--ng)}.ans .a{font-weight:600}.ctx{border-color:var(--brass)}
+#scis,#tree,#quotes,#who,#portrait-gallery{background-color:var(--bg);color:var(--ink)}#scis .job .sci-portrait{border-radius:40% 40% 5px 5px;border-color:var(--line)}#scis .job b{font-size:12px;font-weight:500}#scis .tier h3{font-family:'Noto Serif JP',serif;font-size:15px;font-weight:600;color:var(--ink)}.card h3{font-size:26px;line-height:1.7}.card .deed{background:var(--ctx);border-color:var(--brass)}.card .era{color:var(--sub)}.research-status{color:var(--primary)}.jobclear{border-color:var(--brass);background:var(--ctx)}.tree-sc{background-color:var(--card)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#202e27;--card:#293a30;--ink:#f0e7d4;--sub:#c0c6b5;--line:#5d6957;--soft:#354839;--ctx:#334338;--primary:#c3d0ad;--primary-ink:#24372b;--ok:#b2cca1;--ng:#a75f4c;--brass:#d0b47e;--tag-ink:#fff9eb}}
+:root[data-theme="dark"]{--bg:#202e27;--card:#293a30;--ink:#f0e7d4;--sub:#c0c6b5;--line:#5d6957;--soft:#354839;--ctx:#334338;--primary:#c3d0ad;--primary-ink:#24372b;--ok:#b2cca1;--ng:#a75f4c;--brass:#d0b47e;--tag-ink:#fff9eb}
+:root[data-theme="dark"] #modes .chip[aria-pressed="true"] small{color:#344735}:root[data-theme="dark"] #modes .chip[aria-pressed="true"] .lab-icon{color:#5d502c}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) #modes .chip[aria-pressed="true"] small{color:#344735}:root:not([data-theme="light"]) #modes .chip[aria-pressed="true"] .lab-icon{color:#5d502c}}
+@media(max-width:600px){#opening h1{font-size:clamp(30px,8.7vw,46px)}.opening-copy::before{font-size:9px;margin-bottom:22px}.opening-subtitle{font-size:12px}.notebook-hero h1{font-size:clamp(24px,6.8vw,32px)}#to-opening{float:none;display:block;width:max-content;margin-left:auto;margin-bottom:12px}.team-portraits{gap:14px}.team-name{font-size:11px}.panel{padding:22px 18px}#modes .chip{font-size:14px;padding:14px 12px;grid-template-columns:30px 1fr}#modes .chip .lab-icon{width:25px;height:25px}.q{font-size:21px}.hud .pt{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto}}
+
+#home .foot{background:#203c32eb;color:#e7deca;opacity:1;border:1px solid #bba57450;border-radius:6px;padding:14px 12px;font-size:10px}#home .foot .link{color:#e7deca;font-size:11px}.dq{display:inline-flex;align-items:center;gap:5px}.dq .lab-icon{width:14px;height:14px;color:#dcc18c}.mvlist .lock .lab-icon{width:14px;height:14px;margin-right:6px}
