@@ -1712,6 +1712,7 @@ function openPortraitGallery(){
   function show(id){ ['opening','home','play','result'].forEach(function(s){ $(s).classList.toggle('hide', s !== id); }); window.scrollTo(0,0); }
 
   function begin(){
+    pendingAdvance = null;
     if (mode === 'all' && (!allUnlocked() || !teamIds().length)){ buildHome(); show('home'); return; }
     markOpenedSeen();
     var pool = shuffle(dueFor(mode));
@@ -1830,7 +1831,7 @@ function openPortraitGallery(){
     $('undo').classList.toggle('hide', !last);
   }
   function isAuto(q){ return (q.t === 'num' && q.a != null) || ((q.t === 'ch' || q.t === 'multi') && q.opts && q.opts.length > 1) || (q.t === 'ord' && q.items && q.items.length > 1); }
-  var judged = null;
+  var judged = null, pendingAdvance = null;
   function toHalf(x){ return String(x).replace(/[０-９．－，／]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).replace(/[ー−–―]/g, '-').replace(/[\s,，]/g, ''); }
   function numVal(x){
     x = toHalf(x).replace(/[^0-9.\-\/]/g, '');
@@ -1890,6 +1891,7 @@ function openPortraitGallery(){
     showJudge(ok, ok ? '' : 'あなたの答え: ' + picked.join('・'));
   }
   function undo(){
+    if (pendingAdvance){ pendingAdvance = null; busy = false; }
     if (!last || busy) return;
     pos = last.pos; first = last.first; right = last.right; wrongs.length = last.nw; combo = last.combo; gainedTotal = last.gt;
     P.insight = JSON.parse(last.insight); P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); var dy0 = JSON.parse(last.dy); if (dy0) P.daily = dy0; else delete P.daily; saveP(); sciClearedNow = last.jc; questNow = last.qn; dailyNow = last.dn;
@@ -1941,14 +1943,23 @@ function openPortraitGallery(){
       if (newly.length){ sciClearedNow = (sciClearedNow || []).concat(newly); var nm = newly.map(function(j){ return j.n; }).join('・'); setTimeout(function(){ var m = document.createElement('div'); m.className = 'act'; m.style.top = '70%'; m.style.background = '#f2b01e'; m.style.color = '#2a1700'; m.textContent = nm + 'との研究が完成!'; fx.appendChild(m); tone([784, 988, 1175, 1568], 0.1); }, 300); }
     } else {
       combo = 0; encourage();
-      if (auto) waitMs = 3200; // 自動判定でまちがえたときは正しい答えを読む時間をとる（タップで先へ進める）
       var o = document.createElement('div'); o.className = 'ouch'; o.textContent = E ? E.n + 'のこうげき!' : ''; fx.appendChild(o);
     }
     pos++;
     busy = true;
     var done = false, sk = document.createElement('button');
     sk.id = 'skip'; sk.type = 'button'; sk.setAttribute('aria-label', 'タップで次へ');
-    function go(){ if (done) return; done = true; clearTimeout(tm); if (sk.parentNode) sk.parentNode.removeChild(sk); busy = false; clearFx(); if (pos >= queue.length) finish(); else render(); }
+    function go(){ if (done) return; done = true; pendingAdvance = null; clearTimeout(tm); if (sk.parentNode) sk.parentNode.removeChild(sk); busy = false; clearFx(); if (pos >= queue.length) finish(); else render(); }
+    if (!ok){
+      // 誤答は確認が終わるまで保持する。画面全体のタップや時間経過では進めない。
+      pendingAdvance = go;
+      $('reveal').classList.remove('hide'); $('selfrow').classList.add('hide');
+      $('nextrow').classList.remove('hide');
+      $('next').textContent = pos >= queue.length ? '答えを確認して結果へ' : '答えを確認して次へ';
+      $('undo').classList.remove('hide');
+      setTimeout(function(){ if (pendingAdvance === go) clearFx(); }, 700);
+      return;
+    }
     // 少し見てからならタップで先へ進める
     setTimeout(function(){ if (!done){ sk.onclick = go; document.body.appendChild(sk); } }, 700);
     var tm = setTimeout(go, waitMs);
@@ -2761,7 +2772,7 @@ function openPortraitGallery(){
   $('again').onclick = begin;
   $('show').onclick = function(){ $('show').classList.add('hide'); $('reveal').classList.remove('hide'); };
   $('good').onclick = function(){ answer(true); };
-  $('next').onclick = function(){ if (judged !== null) answer(judged); };
+  $('next').onclick = function(){ if (pendingAdvance) pendingAdvance(); else if (judged !== null) answer(judged); };
   $('numgo').onclick = submitNum;
   $('numin').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); submitNum(); } });
   $('bad').onclick  = function(){ answer(false); };
