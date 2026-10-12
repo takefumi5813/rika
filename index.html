@@ -459,6 +459,8 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto}}
 
 #home .foot{background:#203c32eb;color:#e7deca;opacity:1;border:1px solid #bba57450;border-radius:6px;padding:14px 12px;font-size:10px}#home .foot .link{color:#e7deca;font-size:11px}.dq{display:inline-flex;align-items:center;gap:5px}.dq .lab-icon{width:14px;height:14px;color:#dcc18c}.mvlist .lock .lab-icon{width:14px;height:14px;margin-right:6px}
+
+#modes .chip small{white-space:pre-line}
 </style>
 </head>
 <body>
@@ -1528,13 +1530,13 @@ function openPortraitGallery(){
       box.appendChild(b);
     }
     var unlocked = allUnlocked(), reviewLeft = dueFor('review').length, gnoLeft = dueFor('gnorev').length;
-    chip('all', 'ノーベル賞への挑戦', '(全範囲) 世界の謎を解く、壮大な研究', !unlocked);
+    chip('all', 'ノーベル賞への挑戦', '探求度を上げる\n(全範囲) 世界の謎を解く、壮大な研究', !unlocked);
     chip('gnorev', '先端研究プロジェクト', '(グノレブ対策) ' + (g ? '次回グノレブ対策・残り' + gnoLeft + '問' : '次のテスト範囲は準備中'), !g);
     var ru = reviewUnits();
     chip('review', '基礎実験', '(復習テスト用) ' + (ru.length ? '次回復習テスト対策・残り' + reviewLeft + '問' : '復習範囲は準備中'), !ru.length);
     var researchNote = document.createElement('p'); researchNote.className = 'info'; researchNote.style.textAlign = 'left';
     researchNote.textContent = (unlocked ? '全範囲を解放中。' : '全範囲は、復習テストとグノレブの残り問題が両方0問になると解放。いまは復習' + reviewLeft + '問・グノレブ' + gnoLeft + '問が残っています。') +
-      ' 研究済みの科学者だけが参加できます。探究度は全範囲でのみ成長し、同行中の各科学者が1000問正解で99に到達します。誤答・同じ出題のやり直しは数えません。';
+      ' 研究済みの科学者だけが参加できます。';
     researchNote.prepend(labIcon(unlocked ? 'medal' : 'lock')); box.appendChild(researchNote);
     var cb = $('counts'); cb.innerHTML = '';
     [[5,'5問'],[10,'10問'],[20,'20問'],[0,'ぜんぶ']].forEach(function(p){

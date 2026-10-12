@@ -166,3 +166,5 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto}}
 
 #home .foot{background:#203c32eb;color:#e7deca;opacity:1;border:1px solid #bba57450;border-radius:6px;padding:14px 12px;font-size:10px}#home .foot .link{color:#e7deca;font-size:11px}.dq{display:inline-flex;align-items:center;gap:5px}.dq .lab-icon{width:14px;height:14px;color:#dcc18c}.mvlist .lock .lab-icon{width:14px;height:14px;margin-right:6px}
+
+#modes .chip small{white-space:pre-line}
