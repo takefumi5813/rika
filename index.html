@@ -196,6 +196,7 @@ h1{font-size:26px;font-weight:900;margin:8px 0 4px}
 .quest .qb i{display:block;height:100%;background:linear-gradient(90deg,#f59f00,#e8590c);width:0}
 .quest small{display:block;font-weight:700;font-size:12px;opacity:.85;line-height:1.5}
 .quest .btn{margin-top:8px;min-height:40px;padding:8px 12px;font-size:14px}
+.urgent{background:#fff0f0;border:2px solid #d6336c;border-radius:9px;padding:12px;margin:0 0 12px;font-weight:800;color:#5c0a1f}.urgent.hide{display:none}.urgent .qt{font-size:16px;font-weight:900;margin-bottom:6px}.urgent small{display:block;font-weight:700;font-size:12.5px;line-height:1.55;margin:3px 0}.urgent .qb{height:12px;border-radius:8px;background:rgba(0,0,0,.12);overflow:hidden;margin:8px 0 4px}.urgent .qb i{display:block;height:100%;background:linear-gradient(90deg,#f06595,#c2255c);width:0}.urgent .btn{margin-top:8px;width:100%}.urgent.done{background:#e6f7ee;border-color:#1b8a5a;color:#0e3d28}.uepick{display:flex;flex-direction:column;gap:6px;margin-top:8px}.uepick .btn{margin:0;text-align:left;min-height:42px;font-size:14px}.uepick .btn.arm{background:#1b8a5a;color:#fff;border-color:#1b8a5a}
 .quest.daily{background:#e8f1ff;border-color:#1a5fd8;color:#0d2a5c}
 .quest.daily .qb i{background:linear-gradient(90deg,#4dabf7,#1a5fd8)}
 .quest.daily.done{background:#e6f7ee;border-color:#1b8a5a;color:#0e3d28}
@@ -487,6 +488,7 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
       <span class="team-portraits" id="team-portraits"></span>
     </button>
     <div class="panel">
+      <div class="urgent hide" id="urgent"></div>
       <div class="quest daily" id="daily"></div>
       <h2>何を研究する？</h2>
       <div class="quest hide" id="quest"></div>
@@ -554,6 +556,7 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
       <div class="score"><span id="sc"></span><small> / <span id="tot"></span></small></div>
       <p class="msg" id="rmsg"></p>
       <p class="lvup" id="rpt"></p>
+      <div id="urgentclear" class="urgent done hide"></div>
       <div id="dailyclear" class="jobclear hide"><p id="dailyclearmsg"></p></div>
       <div id="questclear" class="jobclear hide"><p id="questclearmsg"></p><button class="btn" id="toquest">ルシャトリエのカードを見る</button></div>
       <div id="jobclear" class="jobclear hide"><p id="jobclearmsg"></p><button class="btn" id="toscis">研究チームを入れかえる</button></div>
@@ -601,6 +604,55 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
   // 予定表(schedule.json)の quests を書きかえると、アプリを作り直さなくても反映される。
   CFG.quests = CFG.quests || [
     {id:'lechat100', sci:'lechat', title:'緊急クエスト', start:'2026-10-08', end:'2026-10-09', need:100, from:20, to:23, label:'10月度GnoRevの範囲'}
+  ];
+  // ===== 緊急クエスト(1日限定・まちがい直し) =====
+  // start〜end(JST・両日含む)のあいだ、ここにある問題をすべて正解するまで、ほかの問題(デイリーもふくむ)はできない。
+  // まちがえた問題は、正解するまで何度でも出る。報酬: 好きな科学者の研究レベルを1つ上げられる。
+  // 予定表(schedule.json)に "urgent": [...] を書くと、こちらより優先される。
+  CFG.urgent = CFG.urgent || [
+    {id:'eq20261022', title:'緊急クエスト', start:'2026-10-22', end:'2026-10-22', label:'10/21 やり直しプリントでまちがえた問題', src:'10/21 やり直しプリント', qs:[
+      {f:'生物', u:['5'], r:'1', t:'ch', q:'チューリップの茎を横に切ると、維管束(水や養分の通り道)はどのように並んでいる?', opts:['輪のように並んでいる','全体に散らばっている'], a:'全体に散らばっている', n:'チューリップは単子葉植物。単子葉植物の茎の維管束は散らばっている。輪のように並ぶのは双子葉植物。'},
+      {f:'生物', u:['5'], r:'1', t:'ch', q:'チューリップは単子葉植物・双子葉植物のどちら?', opts:['単子葉植物','双子葉植物'], a:'単子葉植物', n:'葉は平行脈、根はひげ根、茎の維管束は散らばっている。'},
+      {f:'生物', u:['5'], r:'2', t:'multi', q:'葉でつくられた栄養分を、地上や地下の「茎」にたくわえている植物をすべて選ぼう。', opts:['サツマイモ','ハス','ダリア','ジャガイモ','サトイモ','ニンジン'], ans:['ハス','ジャガイモ','サトイモ'], a:'ハス・ジャガイモ・サトイモ', n:'ハス(レンコン)・ジャガイモ・サトイモは茎。サツマイモ・ダリア・ニンジンは根にたくわえる。'},
+      {f:'生物', u:['5'], r:'2', t:'ch', q:'栄養分を「根」にたくわえているのはどれ?', opts:['サツマイモ','ジャガイモ','サトイモ','ハス'], a:'サツマイモ', n:'同じ「イモ」でも、サツマイモは根、ジャガイモ・サトイモは茎。'},
+      {f:'生物', u:['5'], r:'3', t:'ch', q:'ネギの葉脈のようすは?', opts:['網状脈','平行脈'], a:'平行脈', n:'ネギは単子葉植物なので平行脈。葉がつつの形でも、すじはまっすぐ平行。'},
+      {f:'化学', u:['25'], r:'4', t:'ch', q:'二酸化炭素を石灰水に通すと白くにごるのは、何ができるから?', opts:['炭酸カルシウム','水酸化カルシウム','炭酸ナトリウム','塩化カルシウム'], a:'炭酸カルシウム', n:'水にとけにくい炭酸カルシウムができて、白くにごる。'},
+      {f:'化学', u:['25'], r:'7(3)', t:'ch', q:'石灰水は、水に何がとけた水溶液?', opts:['炭酸ナトリウム','水酸化ナトリウム','水酸化カルシウム','炭酸カルシウム'], a:'水酸化カルシウム', n:'とけているのは水酸化カルシウム。にごりの正体(炭酸カルシウム)と区別しよう。'},
+      {f:'化学', u:['25'], r:'5', t:'ch', q:'アンモニアの集め方は?', opts:['水上置換法','上方置換法','下方置換法'], a:'上方置換法', n:'アンモニアは水にとけやすく、空気より軽い → 上方置換法。'},
+      {f:'化学', u:['25'], r:'5', t:'ch', q:'水にとけやすく、空気より重い気体の集め方は?', opts:['水上置換法','上方置換法','下方置換法'], a:'下方置換法', n:'塩化水素など。二酸化炭素も下方置換法で集められる。'},
+      {f:'化学', u:['25'], r:'5', t:'ch', q:'下方置換法で集める気体はどれ?', opts:['塩化水素','アンモニア','水素','酸素'], a:'塩化水素', n:'塩化水素は水にとけやすく空気より重い。'},
+      {f:'化学', u:['25'], r:'5', t:'multi', q:'水上置換法で集める気体をすべて選ぼう。', opts:['水素','酸素','アンモニア','塩化水素'], ans:['水素','酸素'], a:'水素・酸素', n:'水にとけにくい気体は水上置換法。アンモニア・塩化水素は水にとけやすい。'},
+      {f:'化学', u:['25'], r:'6', t:'ch', q:'石けん水に息をふきこんでできたあわの中に、最も多くふくまれている気体は?', opts:['ちっ素','酸素','二酸化炭素','水蒸気'], a:'ちっ素', n:'はく息でも、ちっ素が約78%で最も多い。二酸化炭素は約4%。'},
+      {f:'化学', u:['25'], r:'7(1)', t:'ch', q:'重そう(炭酸水素ナトリウム)を加熱すると発生する気体は?', opts:['二酸化炭素','酸素','水素','アンモニア'], a:'二酸化炭素'},
+      {f:'化学', u:['25'], r:'7(4)', t:'ch', q:'重そうを使うと、ケーキやパンがふっくらとできあがるのはなぜ?', opts:['加熱すると二酸化炭素が発生し、生地の中でふくらむから','加熱すると酸素が発生し、生地が燃えやすくなるから','重そうが水を吸って、生地がふくらむから'], a:'加熱すると二酸化炭素が発生し、生地の中でふくらむから'},
+      {f:'化学', u:['25'], r:'8', t:'ch', q:'うすい塩酸を加えて二酸化炭素を発生させる物質のグループとして正しいのは?', opts:['チョーク・石灰石・重そう','貝がら・大理石・重そう・水酸化ナトリウム','卵のから・重そう・炭酸カルシウム・水酸化カルシウム','鉄・亜鉛・アルミニウム・マグネシウム'], a:'チョーク・石灰石・重そう', n:'水酸化ナトリウム・水酸化カルシウムがまじっているものはまちがい。金属は水素が出る。'},
+      {f:'化学', u:['25'], r:'8', t:'ch', q:'鉄・亜鉛・アルミニウム・マグネシウムにうすい塩酸を加えると発生する気体は?', opts:['水素','二酸化炭素','酸素','ちっ素'], a:'水素'},
+      {f:'化学', u:['25'], r:'9(1)', t:'ch', q:'過酸化水素水に二酸化マンガンを入れないと、酸素の発生はどうなる?', opts:['とてもおそい(ほとんど発生しない)','はげしく発生する','酸素ではなく二酸化炭素が発生する'], a:'とてもおそい(ほとんど発生しない)'},
+      {f:'化学', u:['25'], r:'9(2)', t:'multi', q:'過酸化水素水と二酸化マンガンで、酸素の発生をはやくする方法をすべて選ぼう。', opts:['二酸化マンガンの量を増やす','過酸化水素水を濃くする','過酸化水素水の温度を高くする','濃さは同じまま、過酸化水素水の量だけを増やす'], ans:['二酸化マンガンの量を増やす','過酸化水素水を濃くする','過酸化水素水の温度を高くする'], a:'二酸化マンガンの量を増やす・過酸化水素水を濃くする・温度を高くする', n:'濃さが同じなら、量を増やしても速さは変わらない(集まる量が増える)。'},
+      {f:'化学', u:['25'], r:'10(1)', t:'multi', q:'水上置換で集め、メスシリンダーで体積を正確にはかるのにふさわしい気体を2つ選ぼう。', opts:['水素','塩化水素','アンモニア','ちっ素','二酸化炭素'], ans:['水素','ちっ素'], a:'水素・ちっ素', n:'水にとけにくい気体。二酸化炭素は水に少しとけるので、正確な体積がはかりにくい。「2つ選ぶ」は数を確かめる。'},
+      {f:'化学', u:['25'], r:'10(2)', t:'ch', q:'過酸化水素水がだんだんうすくなっていくと、酸素の発生はどうなる?', opts:['だんだんおそくなる','だんだんはやくなる','変わらない'], a:'だんだんおそくなる', n:'グラフの傾きがだんだんゆるやかになる＝発生がおそくなる。'},
+      {f:'化学', u:['25'], r:'11(1)', t:'ch', q:'固体Xに液体Y(うすい塩酸)を加えて二酸化炭素を発生させる。固体Xとして使うものは?', opts:['石灰石','石灰水','二酸化マンガン','鉄'], a:'石灰石', n:'石灰水は二酸化炭素を確かめる液で、発生させる材料ではない。'},
+      {f:'化学', u:['25'], r:'11(3)', t:'ch', q:'気体を発生させるフラスコ → 空の三角フラスコ → 水上置換のメスシリンダー、の順につないで二酸化炭素を発生させた。メスシリンダーに集まる気体はおもに何?', opts:['空気','二酸化炭素','酸素','水素'], a:'空気', n:'二酸化炭素は空のフラスコにたまり、そこから同じ体積の空気がおし出される。'},
+      {f:'化学', u:['25'], r:'11(4)', t:'ch', q:'空の三角フラスコをはさむと、二酸化炭素の体積を正確にはかれるのはなぜ?', opts:['二酸化炭素が空のフラスコの下からたまり、同じ体積の空気がおし出されてメスシリンダーに集まるから','二酸化炭素が空のフラスコで冷やされて、体積が変わらなくなるから','空のフラスコで水分が取りのぞかれ、二酸化炭素そのものがメスシリンダーにたまるから'], a:'二酸化炭素が空のフラスコの下からたまり、同じ体積の空気がおし出されてメスシリンダーに集まるから', n:'空気は水にとけにくいので、水上置換で正確にはかれる。'},
+      {f:'化学', u:['25'], r:'11(7)', t:'ch', q:'二酸化炭素などが、熱が宇宙へ逃げるのをさまたげるはたらき(漢字4字)は?', opts:['温室効果','地球温暖化','酸性雨','光合成'], a:'温室効果', n:'「地球温暖化」は、温室効果によって起こる結果。'},
+      {f:'地学', u:['23'], r:'12①', t:'ch', q:'泥岩(デイ岩)が強い圧力を受けてできた変成岩は?', opts:['粘板岩','大理石','チャート','凝灰岩'], a:'粘板岩', n:'大理石は石灰岩が熱で変化した変成岩。'},
+      {f:'地学', u:['23'], r:'12②', t:'ch', q:'火口から、小さな粒にならずに流れ出てくるものは?', opts:['溶岩','火山灰','火山弾','軽石'], a:'溶岩'},
+      {f:'地学', u:['23'], r:'12③', t:'ch', q:'火山さいせつ物のうち、直径2mm以下の細かい粒を何という?', opts:['火山灰','火山れき','火山弾','軽石'], a:'火山灰'},
+      {f:'地学', u:['23'], r:'13', t:'ch', q:'斑状組織はどんなつくり?', opts:['細かい粒(石基)の中に、大きな結晶(斑晶)が散らばっている','同じくらいの大きさの大きな結晶が、すき間なく組み合わさっている','丸みのある粒が、どろでかためられている'], a:'細かい粒(石基)の中に、大きな結晶(斑晶)が散らばっている', n:'2番目は等粒状組織(深成岩)。'},
+      {f:'地学', u:['22'], r:'14', t:'ch', q:'サンゴやフズリナの化石がたくさん集まってできた岩石は?', opts:['石灰岩','チャート','凝灰岩','砂岩'], a:'石灰岩'},
+      {f:'地学', u:['22'], r:'15', t:'ch', q:'たい積が一度中断した地層の重なり方を何という?', opts:['不整合','整合','しゅう曲','断層'], a:'不整合'},
+      {f:'地学', u:['22'], r:'16', t:'ch', q:'がけの地層が、下から泥→砂→れきの順に重なっていた(上の層ほど粒が大きい)。この場所はどう変わった?', opts:['水が浅くなった(岸に近くなった)','水が深くなった(岸から遠くなった)'], a:'水が浅くなった(岸に近くなった)', n:'下(古い)から上(新しい)へ、時間の順に読む。'},
+      {f:'地学', u:['22'], r:'16', t:'ord', q:'粒の大きいものほど岸の近くにたい積する。岸に近いところから順に並べよう。', items:['れき','砂','泥'], a:'れき→砂→泥'},
+      {f:'地学', u:['23'], r:'17', t:'ch', q:'地上で積もった火山灰の層に化石がほとんどないのは、死がいが(　)中や土の中でくさってしまうから。(　)に入るのは?', opts:['空気','水','マグマ','火山灰'], a:'空気'},
+      {f:'化学', u:['20'], r:'18', t:'ch', q:'硫酸銅の結晶の形は?', opts:['平行四辺形の板状','針状','六角形の板状','立方体'], a:'平行四辺形の板状'},
+      {f:'化学', u:['20'], r:'18', t:'ch', q:'しょう酸カリウムの結晶の形は?', opts:['平行四辺形の板状','針状','六角形の板状','立方体'], a:'針状'},
+      {f:'化学', u:['20'], r:'18', t:'ch', q:'ホウ酸の結晶の形は?', opts:['平行四辺形の板状','針状','六角形の板状','立方体'], a:'六角形の板状'},
+      {f:'化学', u:['21'], r:'19', t:'ch', q:'蒸留で、火を消す前に、試験管にたまった液からガラス管の先を抜いておくのはなぜ?', opts:['試験管の液が逆流して、熱いフラスコが急に冷やされて割れるのを防ぐため','出てくる気体がにげないようにするため','試験管の液がふっとうしないようにするため'], a:'試験管の液が逆流して、熱いフラスコが急に冷やされて割れるのを防ぐため'},
+      {f:'化学', u:['21'], r:'19', t:'ord', q:'ガラス管を液に入れたまま火を消すと起こることを、起こる順に並べよう。', items:['水蒸気が冷えて水にもどる','フラスコの中の気圧が下がる','試験管の液が逆流する','熱いフラスコが急に冷やされて割れる'], a:'水蒸気が冷えて水にもどる→気圧が下がる→液が逆流する→フラスコが割れる'},
+      {f:'化学', u:['夏1'], r:'20', t:'ch', q:'ガスバーナーで加熱する前には、燃えるものが近くにないか確かめ、(　)や燃えさし入れを用意しておく。(　)に入るのは?', opts:['ぬれぞうきん','消火器','軍手','ガラス棒'], a:'ぬれぞうきん'},
+      {f:'生物', u:['17'], r:'21', t:'ch', q:'たん汁が脂肪を水と混ざりやすくするはたらきを何という?', opts:['乳化','消化','吸収','中和'], a:'乳化', n:'ドレッシングをふると油と酢が混ざるのと同じ。'},
+      {f:'生物', u:['夏6'], r:'22', t:'ch', q:'けんび鏡で、対物レンズを取りつけ、回して倍率を変える部分は?', opts:['レボルバー','調節ねじ','反射鏡','鏡筒'], a:'レボルバー'}
+    ]}
   ];
 
   // ===== 仲間（科学者）=====
@@ -1568,6 +1620,12 @@ function openPortraitGallery(){
     } else bb.classList.add('hide');
     buildDaily();
     buildQuest();
+    buildUrgent();
+    if (uBlocking()){
+      $('start').disabled = true;
+      Array.prototype.forEach.call($('modes').querySelectorAll('button'), function(b){ b.disabled = true; });
+      $('dueinfo').textContent = '🚨 緊急クエストをクリアするまで、ほかの研究はお休み。';
+    }
     var gi = $('gnoinfo'), gg = null;   // 細かい範囲の説明は出さない
     if (gg){
       var pp2 = gg.test.split('-'), txt = '📝 ' + gg.name + '(' + (+pp2[1]) + '/' + (+pp2[2]) + ')の範囲: ';
@@ -1694,6 +1752,76 @@ function openPortraitGallery(){
     box.appendChild(row);
     var ss = document.createElement('small'); ss.textContent = (s ? 'れんぞくクリア ' + s + '日' : 'れんぞくクリア 0日') + '・これまで ' + (d.total || 0) + '回クリア'; box.appendChild(ss);
   }
+  // ===== 緊急クエスト(1日限定)の進み方 =====
+  var urgentRun = null, urgentDoneNow = null;
+  function uActive(){ var t = todayJST(); return (CFG.urgent || []).filter(function(u){ return u && u.qs && u.qs.length && t >= u.start && t <= (u.end || u.start); })[0] || null; }
+  function uState(u){ P.urgent = P.urgent || {}; return P.urgent[u.id] || (P.urgent[u.id] = {ok:[], done:false, reward:null}); }
+  function uQs(u){
+    return u.qs.map(function(x, i){ var q = Object.assign({}, x); q.id = 'UQ-' + u.id + '-' + i; q.s = u.src || '緊急クエスト'; q.u = x.u || ['25']; q.tu = q.u.slice(); q.f = x.f || '化学'; return q; });
+  }
+  function uLeft(u){ var st = uState(u); return uQs(u).filter(function(q){ return st.ok.indexOf(q.id) < 0; }); }
+  function uBlocking(){ var u = uActive(); return u && !uState(u).done ? u : null; }
+  function uMd(d){ var p = d.split('-'); return (+p[1]) + '/' + (+p[2]); }
+  // 報酬: 好きな科学者の研究レベル(1〜10)を1つ上げる
+  function uCandidates(){ return SCI.filter(function(j){ var s = sciState(j); return !sciCleared(j.id) && (s === 'current' || s === 'avail'); }); }
+  function uGiveReward(u, j){
+    var st = uState(u); if (st.reward) return;
+    P.rp = P.rp || {}; P.scis = P.scis || {};
+    var rk = rkOf(j.id), L = savedLv(j.id), cur = rpOf(j.id);
+    var nxt = L >= 9 ? rk : Math.ceil(L * rk / 9);
+    P.rp[j.id] = Math.max(cur + 1, nxt);
+    var fin = false;
+    if (P.rp[j.id] >= rk){ P.rp[j.id] = rk; P.scis[j.id] = 1; fin = true; }
+    st.reward = j.id; st.from = L; st.to = fin ? 10 : savedLv(j.id); saveP();
+    tone([659, 784, 988, 1319], 0.1);
+    if (fin) CMP.play([j]);
+  }
+  function uRewardText(st){ var j = SCIMAP[st.reward]; return j ? j.i + ' ' + j.n + 'の研究レベルが ' + st.from + ' → ' + st.to + (st.to >= 10 ? '(研究完成!)' : '') + ' に上がった!' : ''; }
+  // 報酬をえらぶボタンの一覧を box に入れる
+  function uRewardPicker(u, box, after){
+    var cs = uCandidates();
+    var p = document.createElement('small'); p.textContent = '🎁 報酬: 好きな科学者を1人えらぶと、その研究レベルが1つ上がる!'; box.appendChild(p);
+    if (!cs.length){ var p2 = document.createElement('small'); p2.textContent = '研究できる科学者がいません。仲間画面で科学者を仲間にしてから、もう一度ここを開いてね。'; box.appendChild(p2); return; }
+    var wrap = document.createElement('div'); wrap.className = 'uepick';
+    cs.forEach(function(j){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost';
+      b.textContent = j.i + ' ' + j.n + '(研究レベル ' + savedLv(j.id) + (inTeam(j.id) ? '・チーム' : '') + ')';
+      b.onclick = function(){
+        if (b.dataset.arm !== '1'){ Array.prototype.forEach.call(wrap.children, function(c){ c.dataset.arm = ''; c.classList.remove('arm'); }); b.dataset.arm = '1'; b.classList.add('arm'); b.textContent = j.i + ' ' + j.n + ' にする?(もう一度おす)'; return; }
+        uGiveReward(u, j); if (after) after();
+      };
+      wrap.appendChild(b);
+    });
+    box.appendChild(wrap);
+  }
+  function buildUrgent(){
+    var box = $('urgent'), u = uActive(); box.innerHTML = '';
+    if (!u){ box.className = 'urgent hide'; return; }
+    var st = uState(u), all = uQs(u).length, left = uLeft(u).length;
+    var t1 = document.createElement('div'); t1.className = 'qt'; box.appendChild(t1);
+    if (!st.done){
+      box.className = 'urgent';
+      t1.textContent = '🚨 ' + u.title + '(' + uMd(u.start) + (u.end && u.end !== u.start ? '〜' + uMd(u.end) : '') + ' 限定)';
+      var sm = document.createElement('small'); sm.textContent = (u.label || '') + 'を、ぜんぶ正解するまで出題! まちがえた問題は正解するまで何度でも出るよ。クリアするまで、ほかの研究(デイリーもふくむ)はお休み。'; box.appendChild(sm);
+      var bar = document.createElement('div'); bar.className = 'qb'; var bi = document.createElement('i'); bi.style.width = ((all - left) / all * 100) + '%'; bar.appendChild(bi); box.appendChild(bar);
+      var pr = document.createElement('small'); pr.textContent = (all - left) + ' / ' + all + '問 正解(あと' + left + '問)'; box.appendChild(pr);
+      var rw = document.createElement('small'); rw.textContent = '🎁 クリア報酬: 好きな科学者の研究レベルを1つ上げられる'; box.appendChild(rw);
+      var b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = (left < all ? 'つづきから' : '') + '緊急クエストを始める'; b.onclick = beginUrgent; box.appendChild(b);
+    } else {
+      box.className = 'urgent done';
+      t1.textContent = '✅ ' + u.title + ' クリア!';
+      if (!st.reward) uRewardPicker(u, box, function(){ buildHome(); });
+      else { var s2 = document.createElement('small'); s2.textContent = uRewardText(st); box.appendChild(s2); }
+    }
+  }
+  function beginUrgent(){
+    var u = uBlocking(); if (!u){ buildHome(); return; }
+    pendingAdvance = null; urgentRun = u; urgentDoneNow = null;
+    queue = shuffle(uLeft(u)).map(function(q){ return {q:q, retry:false}; });
+    pos = 0; first = 0; init = queue.length; right = 0; wrongs = []; combo = 0; gainedTotal = 0; busy = false; last = null; sciClearedNow = null; questNow = null; dailyNow = null;
+    newEnemy(queue.length);
+    show('play'); render();
+  }
   function openUnits(){ return Object.keys(CFG.open).filter(function(u){ return CFG.open[u] && isOpen(u); }); }
   function newlyOpened(){
     var seen = P.seenOpen;
@@ -1714,7 +1842,8 @@ function openPortraitGallery(){
   function show(id){ ['opening','home','play','result'].forEach(function(s){ $(s).classList.toggle('hide', s !== id); }); window.scrollTo(0,0); }
 
   function begin(){
-    pendingAdvance = null;
+    pendingAdvance = null; urgentRun = null; urgentDoneNow = null;
+    if (uBlocking()){ beginUrgent(); return; }
     if (mode === 'all' && (!allUnlocked() || !teamIds().length)){ buildHome(); show('home'); return; }
     markOpenedSeen();
     var pool = shuffle(dueFor(mode));
@@ -1779,6 +1908,7 @@ function openPortraitGallery(){
     }
     $('combo').textContent = combo >= 2 ? combo + 'れんぞく中' : '';
     var dd = dState(); $('dq').textContent = dd.done ? '達成' : '今日 ' + dd.n + '/' + DAILY_NEED; $('dq').prepend(labIcon('calendar'));
+    if (urgentRun){ $('dq').textContent = '🚨 緊急クエスト のこり' + uLeft(urgentRun).length + '問'; }
     $('tag').textContent = q.f; $('tag').className = 'tag ' + (FCLS[q.f] || '');
     var g = mode === 'gnorev' ? nextGnorev() : null;
     var uo = (g && q.u.filter(function(u){ return /^\d+$/.test(u) && +u >= g.from && +u <= g.to && isOpen(u); })[0]) || q.u.filter(isOpen)[0] || q.u[0];
@@ -1896,7 +2026,7 @@ function openPortraitGallery(){
     if (pendingAdvance){ pendingAdvance = null; busy = false; }
     if (!last || busy) return;
     pos = last.pos; first = last.first; right = last.right; wrongs.length = last.nw; combo = last.combo; gainedTotal = last.gt;
-    P.insight = JSON.parse(last.insight); P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); var dy0 = JSON.parse(last.dy); if (dy0) P.daily = dy0; else delete P.daily; saveP(); sciClearedNow = last.jc; questNow = last.qn; dailyNow = last.dn;
+    P.insight = JSON.parse(last.insight); P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); var dy0 = JSON.parse(last.dy); if (dy0) P.daily = dy0; else delete P.daily; P.urgent = JSON.parse(last.ug || '{}'); if (last.qa) queue = last.qa; urgentDoneNow = last.ud; saveP(); sciClearedNow = last.jc; questNow = last.qn; dailyNow = last.dn;
     if (E){ E.hp = last.ehp; E.dead = last.edead; drawEnemy(); }
     if (last.s) S[last.sid] = last.s; else delete S[last.sid];
     saveS(); last = null; clearFx();
@@ -1906,11 +2036,19 @@ function openPortraitGallery(){
 
   function answer(ok, auto){
     if (busy) return;
-    var it = queue[pos], q = it.q, gained = 0, rankUp = false, L2 = 0, waitMs = 1500;
+    var it = queue[pos], q = it.q, gained = 0, rankUp = false, L2 = 0, waitMs = 1500, U = urgentRun;
     last = {insight:JSON.stringify(P.insight || {}), pos:pos, first:first, right:right, nw:wrongs.length, combo:combo, gt:gainedTotal, xp:P.xp, sid:q.id, s:S[q.id] ? {l:S[q.id].l, d:S[q.id].d} : null,
-            ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), rp:JSON.stringify(P.rp || {}), rlv:P.rlv, jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow, dy:JSON.stringify(P.daily || null), dn:dailyNow};
-    recordInsight(ok, it.retry);
-    if (!it.retry){
+            ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), rp:JSON.stringify(P.rp || {}), rlv:P.rlv, jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow, dy:JSON.stringify(P.daily || null), dn:dailyNow, ug:JSON.stringify(P.urgent || {}), qa:queue.slice(), ud:urgentDoneNow};
+    recordInsight(ok, it.retry || !!U);
+    if (U){
+      // 緊急クエスト: 記録(ランク)・デイリーには数えない。まちがえたら少しあとにもう一度出す
+      if (!it.retry){ first++; if (ok) right++; else wrongs.push(q); }
+      var ust = uState(U);
+      if (ok){ if (ust.ok.indexOf(q.id) < 0) ust.ok.push(q.id); if (!ust.done && !uLeft(U).length){ ust.done = true; ust.at = todayJST(); urgentDoneNow = U; } }
+      else queue.splice(Math.min(queue.length, pos + 4), 0, {q:q, retry:true});
+      saveP();
+    }
+    else if (!it.retry){
       first++;
       var L = (S[q.id] && S[q.id].l) || 0;
       L2 = ok ? Math.min(L + 1, MAXL) : Math.max(L - 1, 0);
@@ -1984,7 +2122,7 @@ function openPortraitGallery(){
       s.textContent = q.q; b.textContent = q.a + (q.t === 'num' && q.unit ? ' ' + q.unit : ''); li.appendChild(s); li.appendChild(b); ul.appendChild(li);
     });
     $('wrongwrap').classList.toggle('hide', wrongs.length === 0);
-    var more = dueFor(mode).length;
+    var more = uBlocking() ? 1 : dueFor(mode).length;
     $('again').disabled = more === 0;
     $('again').textContent = more ? 'つづける' : 'ぜんぶおわり';
     if (r === 1) celebrate(5, 0, false, 0), setTimeout(clearFx, 900);
@@ -1999,6 +2137,19 @@ function openPortraitGallery(){
     var fin = teamOf().filter(function(j){ return sciCleared(j.id); });
     if (fin.length && mode !== 'all'){ $('jobclearmsg').textContent = fin.map(function(j){ return j.n; }).join('・') + 'との研究が完成した!研究チームを入れかえよう。'; jc.classList.remove('hide'); }
     else jc.classList.add('hide');
+    var uc = $('urgentclear'); uc.innerHTML = '';
+    if (urgentRun){
+      $('rmsg').textContent = urgentDoneNow ? '緊急クエスト、ぜんぶ正解!' : $('rmsg').textContent;
+      $('dailyclear').classList.add('hide');
+      var U2 = urgentRun, st2 = uState(U2);
+      if (st2.done){
+        var h = document.createElement('div'); h.className = 'qt'; h.textContent = '✅ ' + U2.title + ' クリア!'; uc.appendChild(h);
+        if (!st2.reward) uRewardPicker(U2, uc, function(){ uc.innerHTML = ''; var h2 = document.createElement('div'); h2.className = 'qt'; h2.textContent = '✅ ' + U2.title + ' クリア!'; uc.appendChild(h2); var s3 = document.createElement('small'); s3.textContent = uRewardText(uState(U2)); uc.appendChild(s3); hud(); });
+        else { var s4 = document.createElement('small'); s4.textContent = uRewardText(st2); uc.appendChild(s4); }
+        $('again').textContent = 'ほかの研究へ'; $('again').disabled = false;
+      }
+      uc.classList.remove('hide');
+    } else uc.classList.add('hide');
     show('result');
     if (sciClearedNow && sciClearedNow.length) CMP.play(sciClearedNow);
   }
@@ -2771,7 +2922,7 @@ function openPortraitGallery(){
   $('toquest').onclick = function(){ var q = (CFG.quests || [])[0]; if (q && SCIMAP[q.sci]) openCard(SCIMAP[q.sci]); };
   $('scisclose').onclick = function(){ $('scis').classList.add('hide'); buildHome(); };
   $('start').onclick = begin;
-  $('again').onclick = begin;
+  $('again').onclick = function(){ if (urgentRun && !uBlocking()){ urgentRun = null; buildHome(); show('home'); return; } begin(); };
   $('show').onclick = function(){ $('show').classList.add('hide'); $('reveal').classList.remove('hide'); };
   $('good').onclick = function(){ answer(true); };
   $('next').onclick = function(){ if (pendingAdvance) pendingAdvance(); else if (judged !== null) answer(judged); };
@@ -2800,7 +2951,7 @@ function openPortraitGallery(){
       var n = 0;
       Object.keys(o.S || {}).forEach(function(k){ var a = S[k], b = o.S[k]; if (!a || (b && (b.l > a.l || (b.l === a.l && b.d > a.d)))){ S[k] = b; n++; } });
       if (o.P){ if ((o.P.xp || 0) > (P.xp || 0)){ P.xp = o.P.xp; P.sci = o.P.sci || P.sci; P.sciStart = o.P.sciStart || P.sciStart; if (o.P.team) P.team = o.P.team; P.rlv = o.P.rlv || lvOf(P.xp).lv; } var rpm = Object.assign({}, o.P.rp || {}); Object.keys(P.rp || {}).forEach(function(k){ rpm[k] = Math.max(rpm[k] || 0, P.rp[k]); }); P.rp = rpm; P.scis = Object.assign({}, o.P.scis || {}, P.scis || {}); var pr = Object.assign({}, o.P.prog || {}); Object.keys(P.prog || {}).forEach(function(k){ pr[k] = Math.max(pr[k] || 0, P.prog[k]); }); P.prog = pr; P.streak = Math.max(P.streak || 0, o.P.streak || 0);
-        var qm = Object.assign({}, o.P.quests || {}); Object.keys(P.quests || {}).forEach(function(k){ var a = qm[k] || {n:0, done:false}, b = P.quests[k]; qm[k] = {n: Math.max(a.n || 0, b.n || 0), done: !!(a.done || b.done), at: b.at || a.at}; }); P.quests = qm; if (o.P.daily){ var da = o.P.daily, db = P.daily; if (!db || da.day > db.day || (da.day === db.day && (da.n || 0) > (db.n || 0))) P.daily = Object.assign({}, da, {total: Math.max(da.total || 0, db ? db.total || 0 : 0)}); else db.total = Math.max(db.total || 0, da.total || 0); } }
+        var qm = Object.assign({}, o.P.quests || {}); Object.keys(P.quests || {}).forEach(function(k){ var a = qm[k] || {n:0, done:false}, b = P.quests[k]; qm[k] = {n: Math.max(a.n || 0, b.n || 0), done: !!(a.done || b.done), at: b.at || a.at}; }); P.quests = qm; var um = Object.assign({}, o.P.urgent || {}); Object.keys(P.urgent || {}).forEach(function(k){ var a = um[k] || {ok:[], done:false, reward:null}, b = P.urgent[k]; var ok2 = (a.ok || []).slice(); (b.ok || []).forEach(function(x){ if (ok2.indexOf(x) < 0) ok2.push(x); }); um[k] = {ok:ok2, done: !!(a.done || b.done), reward: b.reward || a.reward, from: b.from || a.from, to: b.to || a.to, at: b.at || a.at}; }); P.urgent = um; if (o.P.daily){ var da = o.P.daily, db = P.daily; if (!db || da.day > db.day || (da.day === db.day && (da.n || 0) > (db.n || 0))) P.daily = Object.assign({}, da, {total: Math.max(da.total || 0, db ? db.total || 0 : 0)}); else db.total = Math.max(db.total || 0, da.total || 0); } }
       fixS(); saveS(); saveP(); initSci(); buildHome();
       $('bkmsg').textContent = '読み込みました(' + n + '問分を更新)。';
     } catch(e){ $('bkmsg').textContent = 'コードが読めません。「コードを出す」で出た文字を、そのまま全部貼りつけてください。'; }
@@ -2834,6 +2985,7 @@ if(new URLSearchParams(location.search).get('portraits')==='all')openPortraitGal
       if (j.open) Object.keys(j.open).forEach(function(u){ CFG.open[u] = j.open[u]; });
       if (j.gnorev) CFG.gnorev = j.gnorev;
       if (j.quests) CFG.quests = j.quests;
+      if (j.urgent) CFG.urgent = j.urgent;
       if (j.review) CFG.review = j.review;
       if (j.units) Object.keys(j.units).forEach(function(u){ UNITNAME[u] = j.units[u]; });
       if (j.updated) CFG.schedVer = j.updated;
