@@ -607,7 +607,7 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
   ];
   // ===== 緊急クエスト(1日限定・まちがい直し) =====
   // start〜end(JST・両日含む)のあいだ、ここにある問題をすべて正解するまで、ほかの問題(デイリーもふくむ)はできない。
-  // まちがえた問題は、正解するまで何度でも出る。報酬: 好きな科学者の研究レベルを1つ上げられる。
+  // まちがえた問題は、いちばん後ろに回して、正解するまで何度でも出る。報酬: 好きな科学者の研究レベルを1つ上げられる。
   // 予定表(schedule.json)に "urgent": [...] を書くと、こちらより優先される。
   CFG.urgent = CFG.urgent || [
     {id:'eq20261022', title:'緊急クエスト', start:'2026-10-22', end:'2026-10-22', label:'10/21 やり直しプリントでまちがえた問題', src:'10/21 やり直しプリント', qs:[
@@ -1802,7 +1802,7 @@ function openPortraitGallery(){
     if (!st.done){
       box.className = 'urgent';
       t1.textContent = '🚨 ' + u.title + '(' + uMd(u.start) + (u.end && u.end !== u.start ? '〜' + uMd(u.end) : '') + ' 限定)';
-      var sm = document.createElement('small'); sm.textContent = (u.label || '') + 'を、ぜんぶ正解するまで出題! まちがえた問題は正解するまで何度でも出るよ。クリアするまで、ほかの研究(デイリーもふくむ)はお休み。'; box.appendChild(sm);
+      var sm = document.createElement('small'); sm.textContent = (u.label || '') + 'を、ぜんぶ正解するまで出題! まちがえた問題はいちばん後ろに回って、正解するまで何度でも出るよ。クリアするまで、ほかの研究(デイリーもふくむ)はお休み。'; box.appendChild(sm);
       var bar = document.createElement('div'); bar.className = 'qb'; var bi = document.createElement('i'); bi.style.width = ((all - left) / all * 100) + '%'; bar.appendChild(bi); box.appendChild(bar);
       var pr = document.createElement('small'); pr.textContent = (all - left) + ' / ' + all + '問 正解(あと' + left + '問)'; box.appendChild(pr);
       var rw = document.createElement('small'); rw.textContent = '🎁 クリア報酬: 好きな科学者の研究レベルを1つ上げられる'; box.appendChild(rw);
@@ -2041,11 +2041,11 @@ function openPortraitGallery(){
             ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), rp:JSON.stringify(P.rp || {}), rlv:P.rlv, jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow, dy:JSON.stringify(P.daily || null), dn:dailyNow, ug:JSON.stringify(P.urgent || {}), qa:queue.slice(), ud:urgentDoneNow};
     recordInsight(ok, it.retry || !!U);
     if (U){
-      // 緊急クエスト: 記録(ランク)・デイリーには数えない。まちがえたら少しあとにもう一度出す
+      // 緊急クエスト: 記録(ランク)・デイリーには数えない。まちがえたらいちばん後ろに回してもう一度出す
       if (!it.retry){ first++; if (ok) right++; else wrongs.push(q); }
       var ust = uState(U);
       if (ok){ if (ust.ok.indexOf(q.id) < 0) ust.ok.push(q.id); if (!ust.done && !uLeft(U).length){ ust.done = true; ust.at = todayJST(); urgentDoneNow = U; } }
-      else queue.splice(Math.min(queue.length, pos + 4), 0, {q:q, retry:true});
+      else queue.push({q:q, retry:true});
       saveP();
     }
     else if (!it.retry){
