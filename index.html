@@ -603,17 +603,28 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
   // 緊急クエスト: start〜end(JST・両日とも含む)のあいだ、from〜to回の問題に正解した数がneedに届くと、sciの科学者が仲間にできる。
   // 予定表(schedule.json)の quests を書きかえると、アプリを作り直さなくても反映される。
   CFG.quests = CFG.quests || [
-    {id:'lechat100', sci:'lechat', title:'緊急クエスト', start:'2026-10-08', end:'2026-10-09', need:100, from:20, to:23, label:'10月度GnoRevの範囲'}
+    {id:'lechat100', sci:'lechat', title:'緊急クエスト', start:'2026-10-08', end:'2026-10-09', need:100, from:20, to:23, label:'10月度GnoRevの範囲'},
+    // 下の6つは毎日の緊急クエスト(urgentPool)のクリアで達成する(ふつうの問題数では達成しない: from>to)
+    {id:'up1121', sci:'beaumont', title:'緊急クエスト', start:'2026-11-21', end:'2026-11-21', need:1e9, from:1, to:0, label:'第27回・第28回'},
+    {id:'up1122', sci:'huxley', title:'緊急クエスト', start:'2026-11-22', end:'2026-11-22', need:1e9, from:1, to:0, label:'第27回・第28回'},
+    {id:'up1123', sci:'waals', title:'緊急クエスト', start:'2026-11-23', end:'2026-11-23', need:1e9, from:1, to:0, label:'第27回・第28回'},
+    {id:'up1124', sci:'williamson', title:'緊急クエスト', start:'2026-11-24', end:'2026-11-24', need:1e9, from:1, to:0, label:'第27回・第28回'},
+    {id:'up1125', sci:'mayer', title:'緊急クエスト', start:'2026-11-25', end:'2026-11-25', need:1e9, from:1, to:0, label:'第27回・第28回'},
+    {id:'up1126', sci:'newlands', title:'緊急クエスト', start:'2026-11-26', end:'2026-11-26', need:1e9, from:1, to:0, label:'第27回・第28回'}
   ];
   // ===== 緊急クエスト(1日限定・まちがい直し) =====
   // start〜end(JST・両日含む)のあいだ、ここにある問題をすべて正解するまで、ほかの問題(デイリーもふくむ)はできない。
   // まちがえた問題は、いちばん後ろに回して、正解するまで何度でも出る。報酬: 好きな科学者の研究レベルを1つ上げられる。
   // 予定表(schedule.json)に "urgent": [...] を書くと、こちらより優先される。
   // 毎日の緊急クエスト(poolタイプ): start〜end のあいだ毎日、units の回の問題のうち「いま出題される(いつもの出題間隔で期限が来た)問題」から出す。
-  // その日に need 問正解するとクリア(期限の来た問題が need 問より少なければ、その全部に正解でクリア)。クリアするまでデイリーなどほかの問題はできない。
-  // 答えはいつもの記録(ランク・次に出る日)に反映する。デイリーの問題数には数えない。予定表(schedule.json)の "urgentPool" が優先。
+  // その日に need 問正解するとクリア(出せる問題が need 問より少なければ、その全部に正解でクリア)。クリアするまでデイリーなどほかの問題はできない。
+  // 緊急クエストで一度正解した問題は、それ以後は緊急クエストには出さず、ふつうの出題(いつもの出題間隔)だけにまわす(P.upOk)。
+  // 答えはいつもの記録(ランク・次に出る日)に反映する。デイリーの問題数には数えない。
+  // sci に日付ごとの科学者を書くと、その日のクリア報酬はその科学者(CFG.quests の quest を達成扱いにして仲間にできるようにする)。
+  // 予定表(schedule.json)の "urgentPool" が優先。
   CFG.urgentPool = CFG.urgentPool || [
-    {id:'up2728', title:'緊急クエスト', start:'2026-11-21', end:'2026-12-10', units:['27','28'], need:80, label:'第27回・第28回の問題'}
+    {id:'up2728', title:'緊急クエスト', start:'2026-11-21', end:'2026-11-26', units:['27','28'], need:60, label:'第27回・第28回の問題',
+      sci:{'2026-11-21':'beaumont','2026-11-22':'huxley','2026-11-23':'waals','2026-11-24':'williamson','2026-11-25':'mayer','2026-11-26':'newlands'}}
   ];
   CFG.urgent = CFG.urgent || [
     {id:'eq20261022', title:'緊急クエスト', start:'2026-10-22', end:'2026-10-22', label:'10/21 やり直しプリントでまちがえた問題', src:'10/21 やり直しプリント', qs:[
@@ -1090,9 +1101,40 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
     {id:'lechat', t:8, n:'アンリ・ルシャトリエ', i:'⚖️', fx:'balance', d:'つりあいは、変化をやわらげる向きに移る(ルシャトリエの原理)', era:'フランス（1850年10月8日〜1936年）', quest:'lechat100',
       facts:['化学反応が「つりあい（平衡）」の状態にあるとき、温度・圧力・濃度などを変えると、その変化をやわらげる向きにつりあいが移ることを説明した（ルシャトリエの原理）','鉱山技師として働き、セメントなどの材料の研究や、高い温度を測る方法の研究もした','1850年10月8日、パリで生まれた'],
       quiz:[{q:'平衡状態にある反応に条件の変化を加えると、その変化をやわらげる向きに平衡が移ることを説明したフランスの化学者は?',a:'ルシャトリエ'},{q:'「平衡が、加えられた変化をやわらげる向きに移る」という法則を何の原理という?',a:'ルシャトリエの原理'},{q:'アンリ・ルシャトリエの誕生日は何月何日?',a:'10月8日'}],
-      req:[], sp:['20','21','22','23'], bd:'10-08'}
+      req:[], sp:['20','21','22','23'], bd:'10-08'},
+    // 毎日の緊急クエスト(第27回・第28回、11/21〜26)をクリアすると、その日が誕生日の科学者が仲間にできる
+    {id:'beaumont', t:8, n:'ウィリアム・ボーモント', i:'🍖', fx:'potion', d:'胃の中で食べ物が消化されるようすを、はじめて直接観察した', era:'アメリカ（1785年11月21日〜1853年）', quest:'up1121',
+      facts:['おなかにけがをして胃に穴が開いたままになった患者を治療し、その穴から、胃の中で食べ物が消化されるようすを何年も観察した','胃液に塩酸がふくまれていて、胃液が食べ物を消化することを確かめた','1785年11月21日、アメリカのコネチカット州で生まれた'],
+      quiz:[{q:'胃に穴が開いた患者を治療しながら、胃の中で食べ物が消化されるようすを観察したアメリカの医者は?',a:'ボーモント'},{q:'胃液にふくまれている、強い酸性を示す物質は?',a:'塩酸'},{q:'ウィリアム・ボーモントの誕生日は何月何日?',a:'11月21日'}],
+      req:[], sp:['19'], bd:'11-21'},
+    {id:'huxley', t:8, n:'アンドリュー・ハクスリー', i:'🦑', fx:'spark', d:'神経の中を信号が伝わるしくみを明らかにした', era:'イギリス（1917年11月22日〜2012年）', quest:'up1122',
+      facts:['ホジキンといっしょに、イカの太い神経を使って、神経の中を電気の信号が伝わるしくみを調べた','神経の信号は、細胞の膜をナトリウムやカリウムなどが出入りすることで生まれることを明らかにした','1963年ノーベル生理学・医学賞','1917年11月22日、イギリスのロンドンで生まれた'],
+      quiz:[{q:'ハクスリーとホジキンが、神経の信号が伝わるしくみを調べるのに使った、太い神経をもつ動物は?',a:'イカ'},{q:'刺激や脳からの命令を、電気の信号として伝えるからだのつくりは?',a:'神経'},{q:'アンドリュー・ハクスリーの誕生日は何月何日?',a:'11月22日'}],
+      req:[], sp:['19','28'], bd:'11-22'},
+    {id:'waals', t:8, n:'ファン・デル・ワールス', i:'🎈', fx:'atom', d:'実際の気体の性質を説明する式（ファン・デル・ワールスの状態方程式）', era:'オランダ（1837年11月23日〜1923年）', quest:'up1123',
+      facts:['気体のつぶ（分子）どうしが引き合う力や、つぶ自身の大きさを考えに入れて、実際の気体のふるまいを説明した','分子どうしが弱く引き合う力は「ファン・デル・ワールス力」とよばれる','1910年ノーベル物理学賞','1837年11月23日、オランダのライデンで生まれた'],
+      quiz:[{q:'気体のつぶどうしが引き合う力やつぶの大きさを考えて、実際の気体の性質を説明したオランダの物理学者は?',a:'ファン・デル・ワールス'},{q:'分子どうしが弱く引き合う力を、発見した学者の名前から何という?',a:'ファン・デル・ワールス力'},{q:'ファン・デル・ワールスの誕生日は何月何日?',a:'11月23日'}],
+      req:[], sp:['25'], bd:'11-23'},
+    {id:'williamson', t:8, n:'ウィリアム・ウィリアムソン', i:'🌿', fx:'leaf', d:'大昔の植物の化石を調べる「古植物学」の基礎をきずいた', era:'イギリス（1816年11月24日〜1895年）', quest:'up1124',
+      facts:['石炭の中などに残った大昔の植物の化石をうすく切って顕微鏡で調べ、そのつくりを明らかにした','石炭は、大昔の植物が地中にうもれ、長い年月をかけて変化してできたもの','1816年11月24日、イギリスのスカーバラで生まれた'],
+      quiz:[{q:'大昔の植物の化石をうすく切って顕微鏡で調べ、古植物学の基礎をきずいたイギリスの学者は?',a:'ウィリアムソン'},{q:'大昔の植物が地中にうもれ、長い年月をかけて変化してできた燃料は?',a:'石炭'},{q:'ウィリアム・ウィリアムソンの誕生日は何月何日?',a:'11月24日'}],
+      req:[], sp:['24'], bd:'11-24'},
+    {id:'mayer', t:8, n:'ユリウス・ロベルト・マイヤー', i:'🔥', fx:'burn', d:'熱と仕事は入れかわり、エネルギーの量は変わらない（エネルギー保存の考え）', era:'ドイツ（1814年11月25日〜1878年）', quest:'up1125',
+      facts:['船の医者として熱帯へ行ったとき、船員の静脈の血があざやかな赤色であることに気づき、体温を保つための熱と酸素の使い方を考えた','熱と運動（仕事）はたがいに入れかわることができ、その量の関係は決まっていると考えた','エネルギーはすがたを変えても全体の量は変わらない（エネルギー保存の法則）と最初に唱えた一人','1814年11月25日、ドイツのハイルブロンで生まれた'],
+      quiz:[{q:'熱と仕事がたがいに入れかわることを考え、エネルギー保存の法則を最初に唱えた一人とされるドイツの医者は?',a:'マイヤー'},{q:'エネルギーはすがたを変えても全体の量は変わらない、という法則を何という?',a:'エネルギー保存の法則'},{q:'ユリウス・ロベルト・マイヤーの誕生日は何月何日?',a:'11月25日'}],
+      req:[], sp:['冬1','冬2'], bd:'11-25'},
+    {id:'newlands', t:8, n:'ジョン・ニューランズ', i:'🎹', fx:'table', d:'元素を軽い順に並べると8番目ごとに性質が似る（オクターブの法則）', era:'イギリス（1837年11月26日〜1898年）', quest:'up1126',
+      facts:['元素を原子の重さの順に並べると、8番目ごとに性質の似た元素があらわれることに気づいた','音楽のドレミの8音にたとえて「オクターブの法則」とよんだ','メンデレーエフが周期表をつくる前に、元素の性質がくり返すこと（周期性）に気づいていた','1837年11月26日、イギリスのロンドンで生まれた'],
+      quiz:[{q:'元素を重さの順に並べると8番目ごとに性質が似ることに気づき、「オクターブの法則」とよんだイギリスの化学者は?',a:'ニューランズ'},{q:'元素を、性質の似たものが同じ列に並ぶように整理した表を何という?',a:'周期表'},{q:'ジョン・ニューランズの誕生日は何月何日?',a:'11月26日'}],
+      req:[], sp:['1','3'], bd:'11-26'}
   ];
-  var MOVES_QUEST = {lechat: [[1,'⚖️','ring','つりあいキャッチ!'],[3,'🌡️','beam','温度をかえてみる!'],[6,'🫧','multi','圧力で平衡が動く!'],[9,'🧪','glyph','ルシャトリエの原理!']]};
+  var MOVES_QUEST = {beaumont: [[1,'🍖','ring','消化を観察!'],[3,'🔬','glyph','胃の中をのぞく!'],[6,'🧪','beam','胃液の塩酸!'],[9,'📖','multi','消化の研究!']],
+    huxley: [[1,'🦑','ring','イカの神経!'],[3,'⚡','beam','電気の信号!'],[6,'🧠','glyph','神経を伝わる!'],[9,'🏅','spin','ノーベル賞!']],
+    waals: [[1,'🎈','ring','気体キャッチ!'],[3,'🫧','multi','つぶが引き合う!'],[6,'📐','glyph','状態方程式!'],[9,'🏅','spin','ノーベル賞!']],
+    williamson: [[1,'🌿','ring','化石の葉!'],[3,'🔬','glyph','うすく切って観察!'],[6,'🪨','beam','石炭の正体!'],[9,'🌳','multi','大昔の森!']],
+    mayer: [[1,'🔥','ring','熱のパワー!'],[3,'⚙️','spin','熱と仕事!'],[6,'🩸','glyph','赤い静脈の血!'],[9,'♾️','beam','エネルギー保存!']],
+    newlands: [[1,'🎹','ring','ドレミの元素!'],[3,'🎼','multi','8番目ごとに!'],[6,'🧪','glyph','オクターブの法則!'],[9,'📋','beam','周期表の先がけ!']],
+    lechat: [[1,'⚖️','ring','つりあいキャッチ!'],[3,'🌡️','beam','温度をかえてみる!'],[6,'🫧','multi','圧力で平衡が動く!'],[9,'🧪','glyph','ルシャトリエの原理!']]};
   var SCI_OLDSP = {"arch": {"sp": ["35", "36", "13", "14", "30"], "bd": ""}, "cop": {"sp": ["春2", "16", "15"], "bd": "02-19"}, "gal": {"sp": ["冬1", "冬2", "15", "11"], "bd": "02-15"}, "newton": {"sp": ["冬1", "冬2", "夏5", "12"], "bd": "12-25"}, "lav": {"sp": ["夏1", "3", "25"], "bd": "08-26"}, "volta": {"sp": ["8", "夏7"], "bd": "02-18"}, "frank": {"sp": ["8", "34"], "bd": "01-17"}, "faraday": {"sp": ["9", "10", "夏2"], "bd": "09-22"}, "darwin": {"sp": ["28", "29", "夏6"], "bd": "02-12"}, "mendel": {"sp": ["33", "4"], "bd": "07-20"}, "pasteur": {"sp": ["夏6", "17"], "bd": "12-27"}, "edison": {"sp": ["8", "夏8", "冬3"], "bd": "02-11"}, "mendeleev": {"sp": ["1", "3"], "bd": "02-08"}, "nobel": {"sp": ["夏1", "3"], "bd": "10-21"}, "kitasato": {"sp": ["19", "夏6"], "bd": "01-29"}, "noguchi": {"sp": ["19", "夏6"], "bd": "11-09"}, "makino": {"sp": ["5", "33", "4"], "bd": "05-22"}, "shiga": {"sp": ["夏6", "17"], "bd": "02-07"}, "suzuki": {"sp": ["17", "4"], "bd": "04-07"}, "takamine": {"sp": ["17", "19"], "bd": "12-22"}, "nagaoka": {"sp": ["10", "9"], "bd": "08-19"}, "curie": {"sp": ["1", "2"], "bd": "11-07"}, "einstein": {"sp": ["夏3", "冬1"], "bd": "03-14"}, "wegener": {"sp": ["24", "22", "34"], "bd": "11-01"}, "nakaya": {"sp": ["34", "春1"], "bd": "07-04"}, "yukawa": {"sp": ["冬1", "冬2"], "bd": "01-23"}, "tomonaga": {"sp": ["夏3", "夏4"], "bd": "03-31"}, "koshiba": {"sp": ["15", "16"], "bd": "09-19"}, "yamanaka": {"sp": ["18", "19", "17"], "bd": "09-04"}, "omura": {"sp": ["夏6"], "bd": "07-12"}, "honjo": {"sp": ["19"], "bd": "01-27"}, "yoshino": {"sp": ["8", "夏7", "26"], "bd": "01-30"}, "manabe": {"sp": ["34", "春1", "環境"], "bd": "09-21"}, "tanaka": {"sp": ["20", "21"], "bd": "08-03"}, "shimomura": {"sp": ["夏6", "28"], "bd": "08-27"}};
   var MOVES_EXTRA = {"erato": [[1, "📏", "beam", "地球ものさし!"], [3, "🌞", "ring", "夏至の太陽!"], [6, "🕳️", "glyph", "井戸の底の光!"], [9, "🌍", "spin", "地球一周計算!"]], "haytham": [[1, "👁️", "ring", "光キャッチ!"], [3, "🕳️", "glyph", "ピンホールカメラ!"], [6, "🔄", "spin", "さかさまの像!"], [9, "📘", "beam", "『光学の書』!"]], "aristotle": [[1, "🦉", "glyph", "観察の目!"], [3, "🐬", "multi", "イルカは魚じゃない!"], [6, "📚", "beam", "動物の仲間分け!"], [9, "🏛️", "ring", "生物学の祖!"]], "kepler": [[1, "🪐", "spin", "だ円軌道!"], [3, "📜", "glyph", "観測ノート解読!"], [6, "🔭", "beam", "ケプラー式望遠鏡!"], [9, "🌌", "rain", "惑星の法則!"]], "harvey": [[1, "❤️", "ring", "心臓ポンプ!"], [3, "🩸", "spin", "血液循環!"], [6, "🚪", "glyph", "静脈の弁!"], [9, "🔁", "beam", "ぐるぐる一周!"]], "snell": [[1, "🔦", "beam", "屈折ビーム!"], [3, "💧", "glyph", "水の中の光!"], [6, "📐", "swing", "角度の法則!"], [9, "🌈", "rain", "光のカーブ!"]], "pascal": [[1, "🎡", "ring", "圧力プレス!"], [3, "⛰️", "glyph", "山の上の気圧!"], [6, "🧮", "multi", "計算機パスカリーヌ!"], [9, "🌾", "spin", "考える葦!", "人間は考える葦である。", "著書『パンセ』の言葉"]], "torricelli": [[1, "🫙", "glyph", "水銀柱!"], [3, "📏", "beam", "76cmの壁!"], [6, "🌬️", "ring", "大気圧プレス!"], [9, "🌡️", "spin", "気圧計の誕生!"]], "hooke": [[1, "🌀", "swing", "ばねアタック!"], [3, "🔍", "glyph", "顕微鏡ビーム!"], [6, "🧱", "multi", "細胞の部屋!"], [9, "📏", "beam", "比例の法則!"]], "huygens": [[1, "⏱️", "swing", "ふりこ時計!"], [3, "🪐", "ring", "土星の環発見!"], [6, "🌊", "beam", "光の波!"], [9, "🔭", "spin", "タイタン発見!"]], "leeuwen": [[1, "🔬", "glyph", "顕微鏡ビーム!"], [3, "🦠", "rain", "小さな生き物たち!"], [6, "🔴", "multi", "赤血球発見!"], [9, "💧", "spin", "一滴の中の世界!"]], "linne": [[1, "🌼", "multi", "学名ネーミング!"], [3, "🗂️", "glyph", "分類カード!"], [6, "🧍", "ring", "ホモ・サピエンス!"], [9, "📗", "rain", "分類の父!", "神が創造し、リンネが分類した。", "自分の仕事を表したと伝わる言葉"]], "halley": [[1, "☄️", "beam", "すい星ダッシュ!"], [3, "🔁", "spin", "76年の周期!"], [6, "📚", "glyph", "プリンキピア出版!"], [9, "🌠", "rain", "すい星の予言!"]], "celsius": [[1, "🌡️", "beam", "温度目盛り!"], [3, "🧊", "glyph", "0℃の氷!"], [6, "♨️", "ring", "100℃ふっとう!"], [9, "🔁", "spin", "目盛りさかさま!"]], "boyle": [[1, "⚗️", "glyph", "気体プレス!"], [3, "💨", "ring", "空気ポンプ!"], [6, "🔕", "multi", "真空では音が消える!"], [9, "📉", "beam", "反比例の法則!"]], "watt": [[1, "🚂", "beam", "蒸気機関車!"], [3, "♨️", "ring", "蒸気パワー!"], [6, "⚙️", "spin", "歯車回転!"], [9, "🏭", "multi", "産業革命!"]], "cavendish": [[1, "🎈", "rain", "水素バルーン!"], [3, "💥", "ring", "ポンと燃える!"], [6, "💧", "glyph", "燃えたら水!"], [9, "🌍", "spin", "地球の重さ!"]], "priestley": [[1, "🌱", "multi", "ミントの力!"], [3, "🐭", "glyph", "ネズミ元気!"], [6, "🫧", "rain", "炭酸水!"], [9, "💨", "ring", "酸素発見!"]], "ingen": [[1, "☀️", "ring", "日光パワー!"], [3, "🍃", "multi", "緑の葉!"], [6, "🫧", "rain", "酸素のあわ!"], [9, "🌿", "spin", "光合成の発見!"]], "scheele": [[1, "🔥", "glyph", "火の空気!"], [3, "🧪", "multi", "新物質発見!"], [6, "💚", "ring", "塩素!"], [9, "⚗️", "spin", "実験の天才!"]], "jenner": [[1, "🐄", "glyph", "牛痘パワー!"], [3, "💉", "multi", "種痘!"], [6, "🛡️", "ring", "免疫ガード!"], [9, "🌍", "spin", "天然痘をなくせ!"]], "hutton": [[1, "⛰️", "swing", "大地プレス!"], [3, "🪨", "glyph", "不整合発見!"], [6, "⏳", "spin", "長い長い時間!"], [9, "🌋", "ring", "地質学の父!"]], "steno": [[1, "🦈", "glyph", "サメの歯の化石!"], [3, "📚", "multi", "地層の重なり!"], [6, "⬇️", "beam", "下ほど古い!"], [9, "🪨", "spin", "地層累重の法則!"]], "inoh": [[1, "👣", "multi", "測量ウォーク!"], [3, "⭐", "glyph", "北極星で緯度!"], [6, "🗾", "beam", "日本地図!"], [9, "🧭", "spin", "4万km歩いた!"]], "gennai": [[1, "⚡", "glyph", "エレキテル!"], [3, "💫", "multi", "静電気ビリビリ!"], [6, "⛏️", "swing", "鉱山開発!"], [9, "🎨", "ring", "江戸の天才!"]], "genpaku": [[1, "📖", "glyph", "解体新書!"], [3, "🫀", "multi", "体のしくみ!"], [6, "🇳🇱", "beam", "オランダ語解読!"], [9, "🧠", "spin", "神経ネーミング!"]], "dalton": [[1, "⚛️", "ring", "原子説!"], [3, "⚪", "rain", "原子の粒!"], [6, "📓", "glyph", "50年の気象日記!"], [9, "🔬", "spin", "物質の正体!"]], "avogadro": [[1, "🫧", "rain", "分子のあわ!"], [3, "🎈", "ring", "同じ体積!"], [6, "🔢", "glyph", "同じ数!"], [9, "💨", "spin", "アボガドロの法則!"]], "ohm": [[1, "🔌", "beam", "電流ビーム!"], [3, "🧱", "glyph", "抵抗ブロック!"], [6, "📐", "swing", "比例と反比例!"], [9, "Ω", "spin", "オームの法則!"]], "ampere": [[1, "🧭", "spin", "磁界ぐるり!"], [3, "🔩", "beam", "右ねじの向き!"], [6, "🧲", "multi", "電流と磁石!"], [9, "⚡", "ring", "アンペア!"]], "oersted": [[1, "🧭", "swing", "方位磁針ゆれる!"], [3, "⚡", "beam", "電流の力!"], [6, "🧲", "ring", "電気と磁気!"], [9, "💡", "spin", "講義中の大発見!"]], "joule": [[1, "🔥", "glyph", "ジュール熱!"], [3, "🌀", "spin", "羽根車で水を温める!"], [6, "⚡", "beam", "電流で発熱!"], [9, "♻️", "ring", "エネルギー保存!"]], "kelvin": [[1, "🧊", "glyph", "絶対零度!"], [3, "❄️", "rain", "こおりつけ!"], [6, "🌊", "beam", "海底ケーブル!"], [9, "🌡️", "spin", "ケルビン!"]], "doppler": [[1, "🚑", "beam", "ピーポー接近!"], [3, "📢", "ring", "音が高くなる!"], [6, "🔉", "multi", "遠ざかると低い!"], [9, "🌌", "spin", "星の動きもわかる!"]], "foucault": [[1, "🌐", "swing", "フーコーの振り子!"], [3, "🔄", "spin", "地球は回っている!"], [6, "💡", "beam", "光の速さ!"], [9, "🏛️", "ring", "パンテオンの実験!"]], "bell": [[1, "☎️", "ring", "もしもしアタック!"], [3, "🔊", "multi", "声の振動!"], [6, "⚡", "beam", "電気信号!"], [9, "🌐", "spin", "世界をつなげ!"]], "roentgen": [[1, "🩻", "beam", "X線ビーム!"], [3, "🦴", "glyph", "骨が見える!"], [6, "🏅", "multi", "第1回ノーベル賞!"], [9, "✨", "ring", "見えない光!"]], "maxwell": [[1, "📡", "ring", "電磁波!"], [3, "🧲", "multi", "電気と磁気!"], [6, "📝", "glyph", "4つの式!"], [9, "🌈", "beam", "光の正体!"]], "hertz": [[1, "📻", "ring", "電波キャッチ!"], [3, "〰️", "beam", "振動数!"], [6, "⚡", "multi", "火花の実験!"], [9, "📶", "spin", "ヘルツ!"]], "tesla": [[1, "⚡", "glyph", "テスラコイル!"], [3, "🔄", "spin", "交流パワー!"], [6, "🏙️", "beam", "街に送電!"], [9, "🌩️", "rain", "いなずまの雨!"]], "arrhenius": [[1, "🧪", "glyph", "酸とアルカリ!"], [3, "🔴", "multi", "イオンの粒!"], [6, "🌡️", "ring", "温室効果!"], [9, "🌍", "spin", "地球温暖化の予測!"]], "koch": [[1, "🦠", "ring", "細菌ハンター!"], [3, "🧫", "glyph", "純粋培養!"], [6, "🔬", "beam", "結核菌発見!"], [9, "🎓", "spin", "北里の師匠!"]], "fabre": [[1, "🪲", "swing", "フンコロガシ!"], [3, "🐝", "multi", "狩りバチ観察!"], [6, "📚", "glyph", "昆虫記!"], [9, "🦗", "rain", "虫たちの大行進!"]], "lyell": [[1, "🪨", "glyph", "地層読み!"], [3, "🌊", "beam", "流水のはたらき!"], [6, "🌋", "ring", "火山のはたらき!"], [9, "📖", "spin", "地質学原理!"]], "smith": [[1, "🐚", "glyph", "化石しらべ!"], [3, "🗺️", "beam", "地質図!"], [6, "📚", "multi", "地層の対比!"], [9, "⛏️", "spin", "運河掘り!"]], "howard": [[1, "☁️", "rain", "雲シャワー!"], [3, "🌩️", "glyph", "積乱雲!"], [6, "🌥️", "multi", "層雲!"], [9, "🏷️", "spin", "雲の名付け親!"]], "koppen": [[1, "🗺️", "beam", "気候区分!"], [3, "🌴", "multi", "熱帯!"], [6, "🏜️", "glyph", "乾燥帯!"], [9, "❄️", "rain", "寒帯!"]], "liebig": [[1, "🌾", "multi", "肥料パワー!"], [3, "🪣", "glyph", "いちばん低い板!"], [6, "🌱", "ring", "すくすく成長!"], [9, "🧪", "spin", "農芸化学の父!"]], "brown": [[1, "🌸", "rain", "花粉の粒!"], [3, "〰️", "multi", "ブラウン運動!"], [6, "🔵", "glyph", "細胞の核!"], [9, "🔬", "spin", "けんび鏡の目!"]], "kumagusu": [[1, "🍄", "multi", "粘菌アタック!"], [3, "🌳", "ring", "鎮守の森!"], [6, "📚", "glyph", "超記憶力!"], [9, "🌏", "spin", "エコロジー!"]], "terada": [[1, "🌩️", "glyph", "かみなり観察!"], [3, "✒️", "multi", "科学随筆!"], [6, "💎", "ring", "結晶のX線!"], [9, "🌋", "spin", "天災に備えよ!", "天災は忘れたころにやってくる。", "寺田寅彦の言葉として弟子たちが伝えた"]], "honda": [[1, "🧲", "multi", "KS鋼!"], [3, "⚙️", "glyph", "鉄の神様!"], [6, "🔩", "ring", "永久磁石!"], [9, "🏭", "spin", "新KS鋼!"]], "yagi": [[1, "📡", "beam", "八木アンテナ!"], [3, "📺", "ring", "テレビ受信!"], [6, "〰️", "multi", "電波キャッチ!"], [9, "🌐", "spin", "世界のアンテナ!"]], "hata": [[1, "💊", "glyph", "特効薬!"], [3, "🎯", "beam", "魔法の弾丸!"], [6, "🧪", "multi", "606回目の挑戦!"], [9, "🏥", "ring", "病気をなおせ!"]], "kimura": [[1, "🌏", "spin", "緯度観測!"], [3, "⭐", "glyph", "星の位置!"], [6, "🧮", "multi", "Z項!"], [9, "🔭", "beam", "水沢の天文台!"]], "haber": [[1, "🏭", "beam", "アンモニア合成!"], [3, "💨", "ring", "空気から肥料!"], [6, "🌾", "multi", "食料をふやせ!"], [9, "⚗️", "spin", "高圧の反応!"]], "rutherford": [[1, "⚛️", "ring", "原子核発見!"], [3, "✨", "beam", "金ぱく実験!"], [6, "💥", "glyph", "はね返る粒!"], [9, "🌌", "spin", "原子の宇宙!"]], "fleming": [[1, "🍞", "glyph", "アオカビ!"], [3, "🧫", "ring", "細菌が消えた!"], [6, "💊", "multi", "ペニシリン!"], [9, "🍀", "spin", "ぐうぜんの発見!", "わたしはペニシリンを発明したのではない。自然が作ったものを、ぐうぜん見つけただけだ。", "フレミングの言葉として伝わる"]], "hubble": [[1, "🔭", "beam", "望遠鏡ビーム!"], [3, "🌌", "ring", "銀河発見!"], [6, "🎈", "spin", "宇宙膨張!"], [9, "🛰️", "rain", "宇宙望遠鏡!"]], "richter": [[1, "📈", "beam", "マグニチュード!"], [3, "〰️", "multi", "地震計の波!"], [6, "💥", "ring", "32倍パワー!"], [9, "🌏", "spin", "地震の物差し!"]], "wadati": [[1, "🌋", "glyph", "深発地震!"], [3, "📉", "beam", "斜めの震源!"], [6, "🌊", "multi", "海溝!"], [9, "🏢", "spin", "初代気象庁長官!"]], "carson": [[1, "🐦", "multi", "鳥の歌!"], [3, "🌿", "ring", "自然を守れ!"], [6, "📖", "glyph", "沈黙の春!"], [9, "✨", "spin", "センス・オブ・ワンダー!", "子どもたちには、自然のふしぎさに目を見はる感性（センス・オブ・ワンダー）をもち続けてほしい。", "著書『センス・オブ・ワンダー』の考え"]], "goodall": [[1, "🐒", "multi", "チンパンジー観察!"], [3, "🌿", "glyph", "道具を使う!"], [6, "🌳", "ring", "ゴンベの森!"], [9, "🌍", "spin", "生き物を守れ!"]], "gagarin": [[1, "🚀", "beam", "ボストーク発射!"], [3, "🌍", "ring", "地球一周!"], [6, "🛰️", "spin", "宇宙へ!"], [9, "💙", "rain", "地球は青かった!", "地球は青かった。", "日本で広まった言い方として知られる"]], "armstrong": [[1, "🌕", "ring", "月面着陸!"], [3, "👣", "glyph", "月に足あと!"], [6, "🚀", "beam", "アポロ11号!"], [9, "🧑‍🚀", "spin", "偉大な一歩!", "これは一人の人間にとっては小さな一歩だが、人類にとっては偉大な飛躍だ。", "月面に立ったときの言葉"]], "hawking": [[1, "🕳️", "spin", "ブラックホール!"], [3, "🌌", "ring", "宇宙のはじまり!"], [6, "💡", "beam", "ホーキング放射!"], [9, "⭐", "rain", "星を見上げよう!", "足もとではなく、星を見上げよう。", "パラリンピック開会式などで語った言葉"]], "esaki": [[1, "💡", "beam", "トンネル効果!"], [3, "🔌", "glyph", "エサキダイオード!"], [6, "🏅", "multi", "ノーベル物理学賞!"], [9, "⚡", "spin", "電子すりぬけ!"]], "tonegawa": [[1, "🛡️", "ring", "抗体ガード!"], [3, "🧬", "multi", "遺伝子組み合わせ!"], [6, "🔀", "spin", "無限の抗体!"], [9, "🏅", "beam", "ノーベル賞!"]], "shirakawa": [[1, "🔌", "beam", "導電性ポリマー!"], [3, "🧪", "glyph", "ぐうぜんの膜!"], [6, "📱", "multi", "タッチパネル!"], [9, "🏅", "ring", "ノーベル化学賞!"]], "akasaki": [[1, "🔵", "ring", "青い光!"], [3, "💎", "glyph", "結晶づくり!"], [6, "💡", "beam", "LEDビーム!"], [9, "🏅", "spin", "ノーベル物理学賞!"]], "amano": [[1, "🔵", "beam", "青色LED!"], [3, "🔬", "glyph", "失敗1500回!"], [6, "💡", "ring", "省エネの光!"], [9, "🌏", "spin", "世界を照らせ!"]], "nakamura": [[1, "💙", "ring", "青色発光!"], [3, "🏭", "multi", "量産技術!"], [6, "💡", "beam", "LED照明!"], [9, "🔥", "spin", "怒りのパワー!", "怒りがすべての原動力だった。", "研究のエネルギーについて語った言葉"]], "kajita": [[1, "🌌", "rain", "ニュートリノの雨!"], [3, "💧", "glyph", "スーパーカミオカンデ!"], [6, "🔄", "spin", "ニュートリノ振動!"], [9, "🏅", "ring", "ノーベル物理学賞!"]], "osumi": [[1, "🍞", "glyph", "酵母パワー!"], [3, "♻️", "spin", "オートファジー!"], [6, "🔬", "ring", "細胞の中のリサイクル!"], [9, "🏅", "beam", "ノーベル賞!"]], "suzukiakira": [[1, "🔗", "beam", "炭素つなぎ!"], [3, "💊", "multi", "薬づくり!"], [6, "📺", "glyph", "液晶づくり!"], [9, "🏅", "ring", "ノーベル化学賞!"]]};
   (function(){
@@ -1764,15 +1806,21 @@ function openPortraitGallery(){
     var t = todayJST();
     var a = (CFG.urgent || []).filter(function(u){ return u && u.qs && u.qs.length && t >= u.start && t <= (u.end || u.start); })[0];
     if (a) return a;
-    return (CFG.urgentPool || []).filter(function(u){ return u && u.units && t >= u.start && t <= (u.end || u.start) && uState(u).need > 0; })[0] || null;
+    return (CFG.urgentPool || []).filter(function(u){ return u && u.units && t >= u.start && t <= (u.end || u.start) && (uState(u).need > 0 || uPoolSci(u)); })[0] || null;
   }
   function uKey(u){ return u.units ? u.id + '@' + todayJST() : u.id; }
-  function uPoolDue(u){ return DATA.filter(function(q){ return q.f !== '偉人' && q.u.some(function(x){ return u.units.indexOf(x) >= 0; }) && isDue(q); }); }
+  function uPoolDue(u){ var done = P.upOk || []; return DATA.filter(function(q){ return q.f !== '偉人' && done.indexOf(q.id) < 0 && q.u.some(function(x){ return u.units.indexOf(x) >= 0; }) && isDue(q); }); }
+  function uPoolSci(u){ var id = u.sci && u.sci[todayJST()]; return id && SCIMAP[id] ? SCIMAP[id] : null; }
+  // その日の科学者を仲間にできるようにする(クエスト達成扱い)。達成した quest を返す
+  function uPoolReward(u){
+    var j = uPoolSci(u), q = j && questOfSci(j); if (!q || qDone(q)) return null;
+    var st = qState(q); st.done = true; st.at = todayJST(); saveP(); return q;
+  }
   function uState(u){
     P.urgent = P.urgent || {}; var k = uKey(u);
     if (!P.urgent[k]){
       P.urgent[k] = {ok:[], done:false, reward:null};
-      if (u.units){ var n = Math.min(u.need || 80, uPoolDue(u).length); P.urgent[k].need = n; if (!n) P.urgent[k].done = true; saveP(); }
+      if (u.units){ var n = Math.min(u.need || 60, uPoolDue(u).length); P.urgent[k].need = n; if (!n){ P.urgent[k].done = true; P.urgent[k].at = todayJST(); uPoolReward(u); } saveP(); }
     }
     return P.urgent[k];
   }
@@ -1829,12 +1877,15 @@ function openPortraitGallery(){
       var sm = document.createElement('small'); sm.textContent = u.units ? (u.label || '') + 'から今日出る問題で、' + all + '問正解するまで出題! まちがえた問題はいちばん後ろに回って、正解するまで何度でも出るよ。クリアするまで、ほかの研究(デイリーもふくむ)はお休み。' : (u.label || '') + 'を、ぜんぶ正解するまで出題! まちがえた問題はいちばん後ろに回って、正解するまで何度でも出るよ。クリアするまで、ほかの研究(デイリーもふくむ)はお休み。'; box.appendChild(sm);
       var bar = document.createElement('div'); bar.className = 'qb'; var bi = document.createElement('i'); bi.style.width = ((all - left) / all * 100) + '%'; bar.appendChild(bi); box.appendChild(bar);
       var pr = document.createElement('small'); pr.textContent = (all - left) + ' / ' + all + '問 正解(あと' + left + '問)'; box.appendChild(pr);
-      var rw = document.createElement('small'); rw.textContent = '🎁 クリア報酬: 好きな科学者の研究レベルを1つ上げられる'; box.appendChild(rw);
+      var rj = u.units ? uPoolSci(u) : null;
+      var rw = document.createElement('small'); rw.textContent = rj ? '🎁 クリア報酬: 今日が誕生日の ' + rj.i + ' ' + rj.n + ' が仲間にできる!' : '🎁 クリア報酬: 好きな科学者の研究レベルを1つ上げられる'; box.appendChild(rw);
       var b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = (left < all ? 'つづきから' : '') + '緊急クエストを始める'; b.onclick = beginUrgent; box.appendChild(b);
     } else {
       box.className = 'urgent done';
       t1.textContent = '✅ ' + u.title + ' クリア!';
-      if (!st.reward) uRewardPicker(u, box, function(){ buildHome(); });
+      var dj = u.units ? uPoolSci(u) : null;
+      if (u.units){ var s3 = document.createElement('small'); s3.textContent = dj ? dj.i + ' ' + dj.n + 'が仲間にできるようになったよ! 仲間画面でチームに入れよう。' : '今日の緊急クエストはクリア!'; box.appendChild(s3); }
+      else if (!st.reward) uRewardPicker(u, box, function(){ buildHome(); });
       else { var s2 = document.createElement('small'); s2.textContent = uRewardText(st); box.appendChild(s2); }
     }
   }
@@ -2050,7 +2101,7 @@ function openPortraitGallery(){
     if (pendingAdvance){ pendingAdvance = null; busy = false; }
     if (!last || busy) return;
     pos = last.pos; first = last.first; right = last.right; wrongs.length = last.nw; combo = last.combo; gainedTotal = last.gt;
-    P.insight = JSON.parse(last.insight); P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); var dy0 = JSON.parse(last.dy); if (dy0) P.daily = dy0; else delete P.daily; P.urgent = JSON.parse(last.ug || '{}'); if (last.qa) queue = last.qa; urgentDoneNow = last.ud; saveP(); sciClearedNow = last.jc; questNow = last.qn; dailyNow = last.dn;
+    P.insight = JSON.parse(last.insight); P.xp = last.xp; P.scis = JSON.parse(last.scis); P.rp = JSON.parse(last.rp); P.rlv = last.rlv; P.quests = JSON.parse(last.qs); var dy0 = JSON.parse(last.dy); if (dy0) P.daily = dy0; else delete P.daily; P.urgent = JSON.parse(last.ug || '{}'); P.upOk = JSON.parse(last.uo || '[]'); if (last.qa) queue = last.qa; urgentDoneNow = last.ud; saveP(); sciClearedNow = last.jc; questNow = last.qn; dailyNow = last.dn;
     if (E){ E.hp = last.ehp; E.dead = last.edead; drawEnemy(); }
     if (last.s) S[last.sid] = last.s; else delete S[last.sid];
     saveS(); last = null; clearFx();
@@ -2062,7 +2113,7 @@ function openPortraitGallery(){
     if (busy) return;
     var it = queue[pos], q = it.q, gained = 0, rankUp = false, L2 = 0, waitMs = 1500, U = urgentRun;
     last = {insight:JSON.stringify(P.insight || {}), pos:pos, first:first, right:right, nw:wrongs.length, combo:combo, gt:gainedTotal, xp:P.xp, sid:q.id, s:S[q.id] ? {l:S[q.id].l, d:S[q.id].d} : null,
-            ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), rp:JSON.stringify(P.rp || {}), rlv:P.rlv, jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow, dy:JSON.stringify(P.daily || null), dn:dailyNow, ug:JSON.stringify(P.urgent || {}), qa:queue.slice(), ud:urgentDoneNow};
+            ehp:E ? E.hp : 0, edead:E ? E.dead : false, scis:JSON.stringify(P.scis || {}), rp:JSON.stringify(P.rp || {}), rlv:P.rlv, jc:sciClearedNow, qs:JSON.stringify(P.quests || {}), qn:questNow, dy:JSON.stringify(P.daily || null), dn:dailyNow, ug:JSON.stringify(P.urgent || {}), uo:JSON.stringify(P.upOk || []), qa:queue.slice(), ud:urgentDoneNow};
     recordInsight(ok, it.retry || !!U);
     if (U){
       // 緊急クエスト: 記録(ランク)・デイリーには数えない。まちがえたらいちばん後ろに回してもう一度出す
@@ -2073,7 +2124,11 @@ function openPortraitGallery(){
         S[q.id] = {l: L2, d: ok ? dueAt(L2) : Date.now()}; saveS(); rankUp = ok && L2 > Lu;
       }
       var ust = uState(U);
-      if (ok){ if (ust.ok.indexOf(q.id) < 0) ust.ok.push(q.id); if (!ust.done && uDone(U)){ ust.done = true; ust.at = todayJST(); urgentDoneNow = U; } }
+      if (ok){
+        if (ust.ok.indexOf(q.id) < 0) ust.ok.push(q.id);
+        if (U.units){ P.upOk = P.upOk || []; if (P.upOk.indexOf(q.id) < 0) P.upOk.push(q.id); }
+        if (!ust.done && uDone(U)){ ust.done = true; ust.at = todayJST(); urgentDoneNow = U; if (U.units){ var rq = uPoolReward(U); if (rq) questNow = rq; } }
+      }
       else queue.push({q:q, retry:true});
       saveP();
     }
@@ -2743,7 +2798,7 @@ function openPortraitGallery(){
     var ul = document.createElement('ul'); j.facts.forEach(function(f){ var li = document.createElement('li'); li.textContent = f; ul.appendChild(li); }); card.appendChild(ul);
     if (j.quest && !qUnlocked(j)){
       var qq1 = questOfSci(j), qn1 = document.createElement('p'); qn1.className = 'note';
-      qn1.textContent = '🚨 次回グノレブ範囲の問題に' + qq1.need + '問正解で仲間に!(いま ' + Math.min(qState(qq1).n || 0, qq1.need) + '問)';
+      qn1.textContent = qq1.from > qq1.to ? '🚨 ' + uMd(qq1.start) + 'の緊急クエストをクリアすると仲間に!' : '🚨 次回グノレブ範囲の問題に' + qq1.need + '問正解で仲間に!(いま ' + Math.min(qState(qq1).n || 0, qq1.need) + '問)';
       card.appendChild(qn1);
     }
     var note = document.createElement('p'); note.className = 'note';
