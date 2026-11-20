@@ -605,12 +605,12 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
   CFG.quests = CFG.quests || [
     {id:'lechat100', sci:'lechat', title:'緊急クエスト', start:'2026-10-08', end:'2026-10-09', need:100, from:20, to:23, label:'10月度GnoRevの範囲'},
     // 下の6つは毎日の緊急クエスト(urgentPool)のクリアで達成する(ふつうの問題数では達成しない: from>to)
-    {id:'up1121', sci:'beaumont', title:'緊急クエスト', start:'2026-11-21', end:'2026-11-21', need:1e9, from:1, to:0, label:'第27回・第28回'},
-    {id:'up1122', sci:'huxley', title:'緊急クエスト', start:'2026-11-22', end:'2026-11-22', need:1e9, from:1, to:0, label:'第27回・第28回'},
-    {id:'up1123', sci:'waals', title:'緊急クエスト', start:'2026-11-23', end:'2026-11-23', need:1e9, from:1, to:0, label:'第27回・第28回'},
-    {id:'up1124', sci:'williamson', title:'緊急クエスト', start:'2026-11-24', end:'2026-11-24', need:1e9, from:1, to:0, label:'第27回・第28回'},
-    {id:'up1125', sci:'mayer', title:'緊急クエスト', start:'2026-11-25', end:'2026-11-25', need:1e9, from:1, to:0, label:'第27回・第28回'},
-    {id:'up1126', sci:'newlands', title:'緊急クエスト', start:'2026-11-26', end:'2026-11-26', need:1e9, from:1, to:0, label:'第27回・第28回'}
+    {id:'up1121', sci:'beaumont', title:'緊急クエスト', start:'2026-11-21', end:'2026-11-21', need:1e9, from:1, to:0, label:'第28回・第29回'},
+    {id:'up1122', sci:'huxley', title:'緊急クエスト', start:'2026-11-22', end:'2026-11-22', need:1e9, from:1, to:0, label:'第28回・第29回'},
+    {id:'up1123', sci:'waals', title:'緊急クエスト', start:'2026-11-23', end:'2026-11-23', need:1e9, from:1, to:0, label:'第28回・第29回'},
+    {id:'up1124', sci:'williamson', title:'緊急クエスト', start:'2026-11-24', end:'2026-11-24', need:1e9, from:1, to:0, label:'第28回・第29回'},
+    {id:'up1125', sci:'mayer', title:'緊急クエスト', start:'2026-11-25', end:'2026-11-25', need:1e9, from:1, to:0, label:'第28回・第29回'},
+    {id:'up1126', sci:'newlands', title:'緊急クエスト', start:'2026-11-26', end:'2026-11-26', need:1e9, from:1, to:0, label:'第28回・第29回'}
   ];
   // ===== 緊急クエスト(1日限定・まちがい直し) =====
   // start〜end(JST・両日含む)のあいだ、ここにある問題をすべて正解するまで、ほかの問題(デイリーもふくむ)はできない。
@@ -623,7 +623,7 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
   // sci に日付ごとの科学者を書くと、その日のクリア報酬はその科学者(CFG.quests の quest を達成扱いにして仲間にできるようにする)。
   // 予定表(schedule.json)の "urgentPool" が優先。
   CFG.urgentPool = CFG.urgentPool || [
-    {id:'up2728', title:'緊急クエスト', start:'2026-11-21', end:'2026-11-26', units:['27','28'], need:60, label:'第27回・第28回の問題',
+    {id:'up2728', title:'緊急クエスト', start:'2026-11-21', end:'2026-11-26', units:['28','29'], need:60, label:'第28回・第29回の問題',
       sci:{'2026-11-21':'beaumont','2026-11-22':'huxley','2026-11-23':'waals','2026-11-24':'williamson','2026-11-25':'mayer','2026-11-26':'newlands'}}
   ];
   CFG.urgent = CFG.urgent || [
@@ -1102,7 +1102,7 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
       facts:['化学反応が「つりあい（平衡）」の状態にあるとき、温度・圧力・濃度などを変えると、その変化をやわらげる向きにつりあいが移ることを説明した（ルシャトリエの原理）','鉱山技師として働き、セメントなどの材料の研究や、高い温度を測る方法の研究もした','1850年10月8日、パリで生まれた'],
       quiz:[{q:'平衡状態にある反応に条件の変化を加えると、その変化をやわらげる向きに平衡が移ることを説明したフランスの化学者は?',a:'ルシャトリエ'},{q:'「平衡が、加えられた変化をやわらげる向きに移る」という法則を何の原理という?',a:'ルシャトリエの原理'},{q:'アンリ・ルシャトリエの誕生日は何月何日?',a:'10月8日'}],
       req:[], sp:['20','21','22','23'], bd:'10-08'},
-    // 毎日の緊急クエスト(第27回・第28回、11/21〜26)をクリアすると、その日が誕生日の科学者が仲間にできる
+    // 毎日の緊急クエスト(第28回・第29回、11/21〜26)をクリアすると、その日が誕生日の科学者が仲間にできる
     {id:'beaumont', t:8, n:'ウィリアム・ボーモント', i:'🍖', fx:'potion', d:'胃の中で食べ物が消化されるようすを、はじめて直接観察した', era:'アメリカ（1785年11月21日〜1853年）', quest:'up1121',
       facts:['おなかにけがをして胃に穴が開いたままになった患者を治療し、その穴から、胃の中で食べ物が消化されるようすを何年も観察した','胃液に塩酸がふくまれていて、胃液が食べ物を消化することを確かめた','1785年11月21日、アメリカのコネチカット州で生まれた'],
       quiz:[{q:'胃に穴が開いた患者を治療しながら、胃の中で食べ物が消化されるようすを観察したアメリカの医者は?',a:'ボーモント'},{q:'胃液にふくまれている、強い酸性を示す物質は?',a:'塩酸'},{q:'ウィリアム・ボーモントの誕生日は何月何日?',a:'11月21日'}],
