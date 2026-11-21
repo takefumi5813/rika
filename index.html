@@ -624,6 +624,7 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
   // 予定表(schedule.json)の "urgentPool" が優先。
   CFG.urgentPool = CFG.urgentPool || [
     {id:'up2728', title:'緊急クエスト', start:'2026-11-21', end:'2026-11-26', units:['28','29'], need:60, label:'第28回・第29回の問題',
+      cleared:['2026-11-21'],   // クリア済みの日(端末の記録に関係なく、その日はクリア・科学者は仲間にできる扱いにする)
       sci:{'2026-11-21':'beaumont','2026-11-22':'huxley','2026-11-23':'waals','2026-11-24':'williamson','2026-11-25':'mayer','2026-11-26':'newlands'}}
   ];
   CFG.urgent = CFG.urgent || [
@@ -1706,7 +1707,7 @@ function openPortraitGallery(){
       if (shown) return;
       var j = SCIMAP[q.sci]; if (!j) return;
       var st = qState(q), done = qDone(q), joined = sciJoined(j.id) || sciCleared(j.id);
-      if (done ? joined : !qActive(q)) return;
+      if (done ? joined : (!qActive(q) || q.from > q.to)) return;   // from>to は毎日の緊急クエスト用(未達成のあいだは緊急クエスト欄に出す)
       shown = true;
       var t1 = document.createElement('div'); t1.className = 'qt'; box.appendChild(t1);
       var sm = document.createElement('small'); box.appendChild(sm);
@@ -1816,6 +1817,11 @@ function openPortraitGallery(){
   function uPoolCatchUp(){
     (CFG.urgentPool || []).forEach(function(u){
       if (!u || !u.sci) return;
+      (u.cleared || []).forEach(function(d){
+        P.urgent = P.urgent || {}; var k = u.id + '@' + d, s0 = P.urgent[k];
+        if (!s0) s0 = P.urgent[k] = {ok:[], done:false, reward:null, need:0};
+        if (!s0.done){ s0.done = true; s0.at = d; saveP(); }
+      });
       Object.keys(u.sci).forEach(function(d){
         var st = P.urgent && P.urgent[u.id + '@' + d], j = SCIMAP[u.sci[d]], q = j && questOfSci(j);
         if (st && st.done && q && !qDone(q)){ var qs = qState(q); qs.done = true; qs.at = st.at || d; saveP(); }
@@ -3045,7 +3051,7 @@ function openPortraitGallery(){
       var n = 0;
       Object.keys(o.S || {}).forEach(function(k){ var a = S[k], b = o.S[k]; if (!a || (b && (b.l > a.l || (b.l === a.l && b.d > a.d)))){ S[k] = b; n++; } });
       if (o.P){ if ((o.P.xp || 0) > (P.xp || 0)){ P.xp = o.P.xp; P.sci = o.P.sci || P.sci; P.sciStart = o.P.sciStart || P.sciStart; if (o.P.team) P.team = o.P.team; P.rlv = o.P.rlv || lvOf(P.xp).lv; } var rpm = Object.assign({}, o.P.rp || {}); Object.keys(P.rp || {}).forEach(function(k){ rpm[k] = Math.max(rpm[k] || 0, P.rp[k]); }); P.rp = rpm; P.scis = Object.assign({}, o.P.scis || {}, P.scis || {}); var pr = Object.assign({}, o.P.prog || {}); Object.keys(P.prog || {}).forEach(function(k){ pr[k] = Math.max(pr[k] || 0, P.prog[k]); }); P.prog = pr; P.streak = Math.max(P.streak || 0, o.P.streak || 0);
-        var qm = Object.assign({}, o.P.quests || {}); Object.keys(P.quests || {}).forEach(function(k){ var a = qm[k] || {n:0, done:false}, b = P.quests[k]; qm[k] = {n: Math.max(a.n || 0, b.n || 0), done: !!(a.done || b.done), at: b.at || a.at}; }); P.quests = qm; var um = Object.assign({}, o.P.urgent || {}); Object.keys(P.urgent || {}).forEach(function(k){ var a = um[k] || {ok:[], done:false, reward:null}, b = P.urgent[k]; var ok2 = (a.ok || []).slice(); (b.ok || []).forEach(function(x){ if (ok2.indexOf(x) < 0) ok2.push(x); }); um[k] = {ok:ok2, done: !!(a.done || b.done), reward: b.reward || a.reward, from: b.from || a.from, to: b.to || a.to, at: b.at || a.at}; }); P.urgent = um; if (o.P.daily){ var da = o.P.daily, db = P.daily; if (!db || da.day > db.day || (da.day === db.day && (da.n || 0) > (db.n || 0))) P.daily = Object.assign({}, da, {total: Math.max(da.total || 0, db ? db.total || 0 : 0)}); else db.total = Math.max(db.total || 0, da.total || 0); } }
+        var qm = Object.assign({}, o.P.quests || {}); Object.keys(P.quests || {}).forEach(function(k){ var a = qm[k] || {n:0, done:false}, b = P.quests[k]; qm[k] = {n: Math.max(a.n || 0, b.n || 0), done: !!(a.done || b.done), at: b.at || a.at}; }); P.quests = qm; var um = Object.assign({}, o.P.urgent || {}); Object.keys(P.urgent || {}).forEach(function(k){ var a = um[k] || {ok:[], done:false, reward:null}, b = P.urgent[k]; var ok2 = (a.ok || []).slice(); (b.ok || []).forEach(function(x){ if (ok2.indexOf(x) < 0) ok2.push(x); }); um[k] = {ok:ok2, done: !!(a.done || b.done), reward: b.reward || a.reward, from: b.from || a.from, to: b.to || a.to, at: b.at || a.at, need: (b.need != null ? b.need : a.need)}; }); var uo2 = (o.P.upOk || []).slice(); (P.upOk || []).forEach(function(x){ if (uo2.indexOf(x) < 0) uo2.push(x); }); P.upOk = uo2; P.urgent = um; if (o.P.daily){ var da = o.P.daily, db = P.daily; if (!db || da.day > db.day || (da.day === db.day && (da.n || 0) > (db.n || 0))) P.daily = Object.assign({}, da, {total: Math.max(da.total || 0, db ? db.total || 0 : 0)}); else db.total = Math.max(db.total || 0, da.total || 0); } }
       fixS(); saveS(); saveP(); initSci(); buildHome();
       $('bkmsg').textContent = '読み込みました(' + n + '問分を更新)。';
     } catch(e){ $('bkmsg').textContent = 'コードが読めません。「コードを出す」で出た文字を、そのまま全部貼りつけてください。'; }
