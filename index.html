@@ -1106,7 +1106,7 @@ button,input,textarea{font-family:inherit}button,.btn,.chip{font-weight:600}h1,h
     {id:'beaumont', t:8, n:'ウィリアム・ボーモント', i:'🍖', fx:'potion', d:'胃の中で食べ物が消化されるようすを、はじめて直接観察した', era:'アメリカ（1785年11月21日〜1853年）', quest:'up1121',
       facts:['おなかにけがをして胃に穴が開いたままになった患者を治療し、その穴から、胃の中で食べ物が消化されるようすを何年も観察した','胃液に塩酸がふくまれていて、胃液が食べ物を消化することを確かめた','1785年11月21日、アメリカのコネチカット州で生まれた'],
       quiz:[{q:'胃に穴が開いた患者を治療しながら、胃の中で食べ物が消化されるようすを観察したアメリカの医者は?',a:'ボーモント'},{q:'胃液にふくまれている、強い酸性を示す物質は?',a:'塩酸'},{q:'ウィリアム・ボーモントの誕生日は何月何日?',a:'11月21日'}],
-      req:[], sp:['19'], bd:'11-21'},
+      req:[], sp:['17'], bd:'11-21'},
     {id:'huxley', t:8, n:'アンドリュー・ハクスリー', i:'🦑', fx:'spark', d:'神経の中を信号が伝わるしくみを明らかにした', era:'イギリス（1917年11月22日〜2012年）', quest:'up1122',
       facts:['ホジキンといっしょに、イカの太い神経を使って、神経の中を電気の信号が伝わるしくみを調べた','神経の信号は、細胞の膜をナトリウムやカリウムなどが出入りすることで生まれることを明らかにした','1963年ノーベル生理学・医学賞','1917年11月22日、イギリスのロンドンで生まれた'],
       quiz:[{q:'ハクスリーとホジキンが、神経の信号が伝わるしくみを調べるのに使った、太い神経をもつ動物は?',a:'イカ'},{q:'刺激や脳からの命令を、電気の信号として伝えるからだのつくりは?',a:'神経'},{q:'アンドリュー・ハクスリーの誕生日は何月何日?',a:'11月22日'}],
@@ -1666,6 +1666,7 @@ function openPortraitGallery(){
         (bd.some(function(j){ return inTeam(j.id); }) ? ' 研究チームにいるので、今日はポイント2倍!' : ' 研究チームに入れると今日はポイント2倍。');
       bb.classList.remove('hide');
     } else bb.classList.add('hide');
+    uPoolCatchUp();
     buildDaily();
     buildQuest();
     buildUrgent();
@@ -1812,6 +1813,15 @@ function openPortraitGallery(){
   function uPoolDue(u){ var done = P.upOk || []; return DATA.filter(function(q){ return q.f !== '偉人' && done.indexOf(q.id) < 0 && q.u.some(function(x){ return u.units.indexOf(x) >= 0; }) && isDue(q); }); }
   function uPoolSci(u){ var id = u.sci && u.sci[todayJST()]; return id && SCIMAP[id] ? SCIMAP[id] : null; }
   // その日の科学者を仲間にできるようにする(クエスト達成扱い)。達成した quest を返す
+  function uPoolCatchUp(){
+    (CFG.urgentPool || []).forEach(function(u){
+      if (!u || !u.sci) return;
+      Object.keys(u.sci).forEach(function(d){
+        var st = P.urgent && P.urgent[u.id + '@' + d], j = SCIMAP[u.sci[d]], q = j && questOfSci(j);
+        if (st && st.done && q && !qDone(q)){ var qs = qState(q); qs.done = true; qs.at = st.at || d; saveP(); }
+      });
+    });
+  }
   function uPoolReward(u){
     var j = uPoolSci(u), q = j && questOfSci(j); if (!q || qDone(q)) return null;
     var st = qState(q); st.done = true; st.at = todayJST(); saveP(); return q;
@@ -2775,7 +2785,7 @@ function openPortraitGallery(){
     var h3 = document.createElement('h3'); h3.textContent = (justJoined ? '研究チームに入った! ' : '') + scientistName(j); card.appendChild(h3);
     var era = document.createElement('p'); era.className = 'era'; era.textContent = j.era; card.appendChild(era);
     var status = document.createElement('p'); status.className = 'research-status';
-    if (st === 'locked') status.textContent = j.req.map(function(id){ return SCIMAP[id].n; }).join('・') + 'の研究が完成すると仲間にできる';
+    if (st === 'locked') status.textContent = j.req.length ? j.req.map(function(id){ return SCIMAP[id].n; }).join('・') + 'の研究が完成すると仲間にできる' : 'まだ仲間にできない';
     else status.textContent = (st === 'current' ? '研究チーム · ' : '') + (sciCleared(j.id) ? '研究完成' : '研究レベル ' + savedLv(j.id) + ' / 10');
     card.appendChild(status);
     if (sciCleared(j.id) && j.id !== 'me'){
@@ -3068,7 +3078,10 @@ if(new URLSearchParams(location.search).get('portraits')==='all')openPortraitGal
       if (!j) return;
       if (j.open) Object.keys(j.open).forEach(function(u){ CFG.open[u] = j.open[u]; });
       if (j.gnorev) CFG.gnorev = j.gnorev;
-      if (j.quests) CFG.quests = j.quests;
+      if (j.quests){   // id ごとに上書き・追加(アプリ側にしかないクエストは残す)
+        var qm = {}; CFG.quests.forEach(function(q, i){ qm[q.id] = i; });
+        j.quests.forEach(function(q){ if (q.id in qm) CFG.quests[qm[q.id]] = q; else CFG.quests.push(q); });
+      }
       if (j.urgent) CFG.urgent = j.urgent;
       if (j.urgentPool) CFG.urgentPool = j.urgentPool;
       if (j.review) CFG.review = j.review;
